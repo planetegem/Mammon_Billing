@@ -7,7 +7,9 @@ import java.util.HashMap;
 
 import javax.swing.JOptionPane;
 
+import be.planetegem.mammon.statics.LanguageFile;
 import be.planetegem.mammon.util.FormattedCell;
+import be.planetegem.mammon.util.FormattedTable;
 
 public class InvoiceTable extends InvoiceTableUI implements ActionListener {
 
@@ -17,6 +19,43 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
     }
     public String getVat(){
         return currentVat;
+    }
+
+    // getter for formatted table (used when generating pdf)
+    public FormattedTable getFormattedTable(){
+        FormattedTable result = new FormattedTable(this.lang);
+        result.setDescriptionColumn(this.descriptionColumn);
+        result.setDateColumn(this.dateColumn);
+        result.setAmountColumn(this.amountColumn);
+        result.setPriceColumn(this.priceColumn);
+
+        ArrayList<String> strTotalColumn = new ArrayList<String>();
+        for (float total : totalColumn){
+            String strTotal = String.format("%.2f", total) + " € ";
+            strTotalColumn.add(strTotal);
+        }
+        result.setTotalsColumn(strTotalColumn);
+
+        ArrayList<String> subtotals = new ArrayList<String>();
+        subtotals.add(LanguageFile.sTotal[lang]);
+        subtotals.add(String.format("%.2f", subtotal).replace(".", ",") + " € ");
+
+        String selectedVat = vatSelector.getSelectedItem().toString();
+        if (selectedVat.equals("21%")){
+            subtotals.add(LanguageFile.vat21[lang]);
+        } else if (selectedVat.equals("0%")){
+            subtotals.add(LanguageFile.vat0[lang]);
+            result.setReverseVat();
+        } else if (selectedVat.equals("6%")){
+            subtotals.add(LanguageFile.vat6[lang]);
+        }
+        subtotals.add(String.format("%.2f", subtotalWithVat).replace(".", ",") + " € ");
+        subtotals.add(LanguageFile.fTotal[lang]);
+        subtotals.add(String.format("%.2f", finalTotal).replace(".", ",") + " € ");
+        System.out.println(subtotals);
+        result.setSubtotals(subtotals);
+
+        return result;
     }
 
     // setter for table and vat (used when loading invoice from db)
@@ -76,7 +115,7 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
         dateColumn = new ArrayList<FormattedCell>();
         amountColumn = new ArrayList<FormattedCell>();
         priceColumn = new ArrayList<FormattedCell>();
-        totalColumn = new ArrayList<Double>();
+        totalColumn = new ArrayList<Float>();
 
         // loop through tableArray: combine cells if previous one was the same
         for (int i = 0; i < tableArray.size(); i++){
@@ -96,7 +135,7 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
                 amountColumn.add(new FormattedCell(i, 1, content));
 
                 content = tableArray.get(i).get("price");
-                priceColumn.add(new FormattedCell(i, 1, content));
+                priceColumn.add(new FormattedCell(i, 1, content + " €"));
             } else {
                 // Compare against previous values
                 String content;
@@ -118,6 +157,8 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
                 if (tableArray.get(i).get("amount").equals("/")){
                     if (tableArray.get(i - 1).get("amount").equals("/")){
                         amountColumn.get(amountColumn.size() - 1).height++;
+                    } else {
+                        amountColumn.add(new FormattedCell(i, 1, "/"));
                     }
                 } else {
                     content = tableArray.get(i).get("amount");
@@ -131,22 +172,22 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
                     priceColumn.get(priceColumn.size() - 1).height++;
                 } else {
                     content = tableArray.get(i).get("price");
-                    priceColumn.add(new FormattedCell(i, 1, content));
+                    priceColumn.add(new FormattedCell(i, 1, content + " €"));
                 }
             }
 
             // Calculate totals
             String cleanAmount = tableArray.get(i).get("amount").replace(",", ".");
-            double amountDouble;
+            float amountFloat;
             if (cleanAmount.equals("/")){
-                amountDouble = 1;
+                amountFloat = 1;
             } else {
-                amountDouble = Double.parseDouble(cleanAmount);
+                amountFloat = Float.parseFloat(cleanAmount);
             }
             String cleanPrice = tableArray.get(i).get("price").replace(",", ".");
-            double priceDouble = Double.parseDouble(cleanPrice);
+            float priceFloat = Float.parseFloat(cleanPrice);
 
-            totalColumn.add(amountDouble*priceDouble);
+            totalColumn.add(amountFloat*priceFloat);
         }
     }
     

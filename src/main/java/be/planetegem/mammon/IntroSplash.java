@@ -29,7 +29,7 @@ public class IntroSplash extends JInternalFrame implements ActionListener {
 
         // Assign dimensions of Splash Screen
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension splashSize = new Dimension(550, 650);
+        Dimension splashSize = new Dimension(screenSize.width, screenSize.height - 60);
         int marginLeft = (int) Math.round((screenSize.getWidth() - splashSize.getWidth())*0.5);
         int marginTop = (int) Math.round((screenSize.getHeight() - splashSize.getHeight())*0.25);
         
@@ -45,7 +45,7 @@ public class IntroSplash extends JInternalFrame implements ActionListener {
         getContentPane().add(Box.createRigidArea(new Dimension(splashSize.width, 5)));
 
         // Jean-Pierre image
-        Dimension logoSize = new Dimension(300, 300);
+        Dimension logoSize = new Dimension(400, 400);
         JPanel logoContainer = new JPanel();
         logoContainer.setBackground(StyleSheet.wizardBlue);
         logoContainer.setPreferredSize(logoSize);
@@ -113,7 +113,7 @@ public class IntroSplash extends JInternalFrame implements ActionListener {
         buttonContainer.add(makeProfile);
         buttonContainer.setBackground(StyleSheet.wizardBlue);
         getContentPane().add(buttonContainer);
-
+        getContentPane().add(Box.createVerticalGlue());
         getContentPane().add(Box.createRigidArea(new Dimension(splashSize.width, 35)));
 
         pack();

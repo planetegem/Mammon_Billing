@@ -1,5 +1,7 @@
 package be.planetegem.mammon.statics;
 
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+
 public class DocumentConstraints {
     // Summary:
     // Top margin 8
@@ -58,4 +60,17 @@ public class DocumentConstraints {
     static final public int tSubtotalWidth = tSubtotalLeft + tSubtotalRight;
     static final public int tHeaderHeight = 10;
 
+    // Pdf measurements
+    static final public float pdfRatio = PDRectangle.A4.getWidth()/a4Width;
+    static final public float ivHeaderY = lineHeight + profileHeight + lineHeight;
+    static final public float customerY = ivHeaderY + lineHeight*2;
+    static final public float invoiceNumberY = customerY + customerHeight + lineHeight;
+    static final public float tHeaderY = invoiceNumberY + lineHeight + tHeaderHeight;
+    static final public float tDescriptionX = baseMargin;
+    static final public float tDateX = tDescriptionX + tDescription;
+    static final public float tAmountX = tDateX + tDate;
+    static final public float tPriceX = tAmountX + tNumber;
+    static final public float tTotalX = tPriceX + tPrice;
+    static final public float subtotalLeftX = a4Width - baseMargin - tSubtotalWidth;
+    static final public float subtotalRightX = a4Width - baseMargin - tSubtotalRight;
 }

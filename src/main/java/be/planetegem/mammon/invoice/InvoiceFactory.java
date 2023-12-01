@@ -8,9 +8,11 @@ import java.util.Date;
 import java.util.HashMap;
 
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import be.planetegem.mammon.Mammon;
+import be.planetegem.mammon.PdfPenman;
 import be.planetegem.mammon.db.DbCommands;
 import be.planetegem.mammon.db.DbConsole;
 import be.planetegem.mammon.statics.LanguageFile;
@@ -185,7 +187,7 @@ public class InvoiceFactory extends InvoiceFactoryUI implements ActionListener {
     }
 
     // send invoice to db
-    private void updateDb(){
+    private void updateDb(boolean pdfRequested){
         // Check if data is complete: customer, place, term, account, minimum one line in table
         String ivPlace = placeField.getText();
         String ivTerm = paymentTermField.getText();
@@ -255,6 +257,56 @@ public class InvoiceFactory extends InvoiceFactoryUI implements ActionListener {
             } else {
                 invoiceSelector.setSelectedIndex(invoiceIndex);
             }
+
+            // Pdf creation logic
+            if (status != DbCommands.FAIL && pdfRequested){
+                db.logEvent("Event triggered: pdf requested");
+
+                PdfPenman pdfPenman = parent.getPdfPenman();
+                int result = pdfPenman.setPdfPath(ivNumber);
+                if (result == JFileChooser.APPROVE_OPTION){
+                    pdfPenman.startPdf();
+
+                    boolean trueLogo = true;
+                    String logo = currentProfile.get("LOGOPATH");
+                    if (logo.equals("")){
+                        logo = currentProfile.get("COMPANYNAME");
+                        trueLogo = false;
+                    }
+                    pdfPenman.setProfile(logo, pm.getPdfString(), trueLogo);
+
+                    String ivHeader = typeSelector.getSelectedItem().toString();
+                    ivHeader += " " + LanguageFile.created[lang] + " ";
+                    ivHeader += placeField.getText();
+                    ivHeader += " " + LanguageFile.on[lang] + " ";
+                    ivHeader += dateField.getText();
+
+                    pdfPenman.setInvoiceHeader(ivHeader);
+                    pdfPenman.setCustomer(LanguageFile.to[lang], cm.getPdfString());
+
+                    String ivNumberString = "";
+                    if (direction == "POSITIVE"){
+                        ivNumberString += LanguageFile.invoiceNr[lang] + " " + ivNumber; 
+                    } else if (direction == "NEGATIVE"){
+                        ivNumberString += LanguageFile.creditNote[lang] + " " + ivNumber; 
+                    }
+                    pdfPenman.setInvoiceNumber(ivNumberString);
+
+                    pdfPenman.setTable(ivTable.getFormattedTable());
+
+                    ArrayList<String> footer = new ArrayList<String>();
+                    String footerLine = LanguageFile.footer1[lang];
+                    footerLine += " " + ivTerm + " ";
+                    footerLine += LanguageFile.footer2[lang];
+                    footer.add(footerLine);
+                    footerLine = "IBAN " + ivAccount;
+                    footer.add(footerLine);
+                    pdfPenman.setFooter(footer);
+
+                    pdfPenman.savePdf();
+                }   
+            }
+
         }
     }
 
@@ -291,7 +343,12 @@ public class InvoiceFactory extends InvoiceFactoryUI implements ActionListener {
         }
         if (e.getSource() == confirmInvoice){
             db.logEvent("Event triggered: invoice submission");
-            updateDb();
+            updateDb(false);
+        }
+        if (e.getSource() == confirmPdf){
+            db.logEvent("Event triggered: invoice submission");
+            updateDb(true);
+            
         }
     }
 

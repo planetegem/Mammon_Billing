@@ -11,7 +11,6 @@ import javax.swing.JScrollPane;
 
 import be.planetegem.mammon.db.DbConsole;
 import be.planetegem.mammon.invoice.InvoiceFactory;
-import be.planetegem.mammon.invoice.InvoiceMaker;
 import be.planetegem.mammon.statics.StyleSheet;
 import be.planetegem.mammon.wizards.CustomerWizard;
 import be.planetegem.mammon.wizards.ProfileWizard;
@@ -26,14 +25,13 @@ import java.awt.event.ActionListener;
 
 public class Mammon extends JFrame implements ActionListener
 {   
-
     // Main components:
     private DbConsole db; // Manages database interactions 
     private InvoiceFactory ivf;
-    private InvoiceMaker invoiceMaker; // Invoice creation interface
     private ProfileWizard pw; // Profile creation interface
     private CustomerWizard cw; // Customer creation interface
     private IntroSplash splash; // Welcome screen
+    private PdfPenman pdfPen;
 
     private JDesktopPane cPane; // Main content pane (for internal frame management)
     private JMenuItem infoItem, consoleItem; // Menu items
@@ -45,39 +43,55 @@ public class Mammon extends JFrame implements ActionListener
     public InvoiceFactory getIvf(){
         return ivf;
     }
-    public InvoiceMaker getInvoiceMaker(){
-        return invoiceMaker;
-    }
     public JDesktopPane getDesktopPane(){
         return cPane;
+    }
+    public PdfPenman getPdfPenman(){
+        return pdfPen;
     }
 
     // setters
     public void setProfileWizard(){
+        if (pw != null){
+            pw.dispose();
+        }
         pw = new ProfileWizard(this);
         getContentPane().add(pw);
         cPane.moveToFront(pw);
     }
     public void setProfileWizard(HashMap<String, String> profile){
+        if (pw != null){
+            pw.dispose();
+        }
         pw = new ProfileWizard(this, profile);
         getContentPane().add(pw);
         cPane.moveToFront(pw);
     }
     public void setCustomerWizard(){
+        if (cw != null){
+            cw.dispose();
+        }
         cw = new CustomerWizard(this);
         getContentPane().add(cw);
         cPane.moveToFront(cw);
     }
     public void setCustomerWizard(HashMap<String, String> customer){
+        if (cw != null){
+            cw.dispose();
+        }
         cw = new CustomerWizard(this, customer);
         getContentPane().add(cw);
         cPane.moveToFront(cw);
     }
     public void setIntroSplash(){
+        if (splash != null){
+            splash.dispose();
+        }
         splash = new IntroSplash();
         getContentPane().add(splash);
         cPane.moveToFront(splash);
     }
+
 
     public void actionPerformed(ActionEvent e){
         if (e.getSource() == consoleItem){
@@ -95,6 +109,7 @@ public class Mammon extends JFrame implements ActionListener
         cPane.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
 
         db = new DbConsole(this, cPane);
+        pdfPen = new PdfPenman(this);
 
         JPanel mainContent = new JPanel();
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();

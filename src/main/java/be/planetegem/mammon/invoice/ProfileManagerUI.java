@@ -52,6 +52,42 @@ public class ProfileManagerUI extends JPanel {
         this.db = db;
     }
 
+    // converts profile details to simple string (used during pdf generation)
+    public String getPdfString(){
+        String details = "";
+        String unicodeSymbol = " \u2981 ";
+        
+        if (!currentProfile.get("LOGOPATH").equals("") && currentProfile.get("FAMILYNAME").equals("")){
+            details += currentProfile.get("COMPANYNAME");
+            details += unicodeSymbol;
+        } else if (!currentProfile.get("FAMILYNAME").equals("")){
+            details += currentProfile.get("FIRSTNAME") + " " + currentProfile.get("FAMILYNAME");
+            details += unicodeSymbol;
+        }
+
+        // Address label
+        details += currentProfile.get("STREETNAME") + " " + currentProfile.get("HOUSENUMBER");
+        if (!currentProfile.get("BOXNUMBER").equals("")){
+            details += " " + currentProfile.get("BOXNUMBER");
+        }
+        details += ", " + currentProfile.get("POSTALCODE") + " " + currentProfile.get("PLACENAME");
+        if (currentProfile.get("COUNTRYNAME").equals("België")){
+            details += " - " + LanguageFile.belgium[lang];
+        } else {
+            details += " - " + currentProfile.get("COUNTRYNAME");
+        }
+        details += unicodeSymbol;
+
+        // Vat label
+        details += LanguageFile.vat[lang] + " " + currentProfile.get("VATNUMBER");
+
+        if (!currentProfile.get("ACCOUNTNUMBER").equals("")){
+            details += unicodeSymbol;
+            details += "IBAN " + currentProfile.get("ACCOUNTNUMBER");
+        }
+        return details;
+    }
+
     // Switch to other language: called from invoice maker
     public void setLanguage(int lang){
         this.lang = lang;

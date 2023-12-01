@@ -46,7 +46,7 @@ public class InvoiceTableUI extends JPanel {
     protected ArrayList<FormattedCell> dateColumn;
     protected ArrayList<FormattedCell> amountColumn;
     protected ArrayList<FormattedCell> priceColumn;
-    protected ArrayList<Double> totalColumn;
+    protected ArrayList<Float> totalColumn;
 
     // to add new lines     
     protected boolean addingNewLine = false;
@@ -81,26 +81,26 @@ public class InvoiceTableUI extends JPanel {
     }
 
     // calculate totals
-    private double subtotal;
-    private double subtotalWithVat;
-    private double finalTotal;
+    public float subtotal;
+    public float subtotalWithVat;
+    public float finalTotal;
     private JLabel subtotalLabel, vatLabel, finalTotalLabel;
 
     public void setTotals() {
         if (tableArray.size() > 0){
             subtotal = 0;
-            for (Double number : totalColumn){
+            for (Float number : totalColumn){
                 subtotal += number;
             }
             String label = String.format("%.2f", subtotal).replace(".", ",") + " € ";
             subtotalLabel.setText(label);
 
             if (currentVat.equals("21%")){
-                subtotalWithVat = subtotal*0.21;
+                subtotalWithVat = subtotal*0.21f;
             } else if (currentVat.equals("0%")){
                 subtotalWithVat = subtotal*0;
             } else if (currentVat.equals("6%")){
-                subtotalWithVat = subtotal*0.06;
+                subtotalWithVat = subtotal*0.06f;
             }
             label = String.format("%.2f", subtotalWithVat).replace(".", ",") + " € ";
             vatLabel.setText(label);
@@ -283,7 +283,7 @@ public class InvoiceTableUI extends JPanel {
 
             currentX += DocumentConstraints.tNumber*DocumentConstraints.previewRatio;
             for (FormattedCell cell : priceColumn){
-                JLabel tempPrice = new JLabel(cell.string + " €", SwingConstants.CENTER);
+                JLabel tempPrice = new JLabel(cell.string, SwingConstants.CENTER);
                 tempPrice.setFont(StyleSheet.documentFont);
                 tempPrice.setBounds(
                     currentX, 

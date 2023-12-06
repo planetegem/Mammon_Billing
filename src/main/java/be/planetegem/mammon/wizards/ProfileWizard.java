@@ -12,7 +12,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import be.planetegem.mammon.Mammon;
 import be.planetegem.mammon.db.DbConsole;
-import be.planetegem.mammon.util.JResizedImage;
+import be.planetegem.mammon.util.ResizedImage;
 
 public class ProfileWizard extends ProfileWizardUI implements ActionListener {
 
@@ -73,7 +73,7 @@ public class ProfileWizard extends ProfileWizardUI implements ActionListener {
                 db.logEvent("Image selected: " + logoPath);
 
                 try {
-                    JResizedImage image = new JResizedImage(logoPath, previewWidth - 30, previewHeight - 10);
+                    ResizedImage image = new ResizedImage(logoPath, previewWidth - 30, previewHeight - 10);
                     setLogoPreview(new ImageIcon(image.resized));
                     db.logEvent("Image resized and loaded");
 
@@ -115,7 +115,7 @@ public class ProfileWizard extends ProfileWizardUI implements ActionListener {
             db.logEvent("Trying to load image from path: " + logoPath);
 
             try {
-                JResizedImage image = new JResizedImage(currentProfile.get("LOGOPATH"), previewWidth - 30, previewHeight - 10);
+                ResizedImage image = new ResizedImage(currentProfile.get("LOGOPATH"), previewWidth - 30, previewHeight - 10);
                 setLogoPreview(new ImageIcon(image.resized));
                 db.logEvent("Image resized and loaded");
                         

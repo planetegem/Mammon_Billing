@@ -1,4 +1,4 @@
-package be.planetegem.mammon.invoice;
+package be.planetegem.mammon.ivf;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -17,12 +17,12 @@ import javax.swing.SwingConstants;
 
 import be.planetegem.mammon.Mammon;
 import be.planetegem.mammon.db.DbConsole;
-import be.planetegem.mammon.statics.DocumentConstraints;
+import be.planetegem.mammon.statics.DocConstraints;
 import be.planetegem.mammon.statics.LanguageFile;
 import be.planetegem.mammon.statics.StyleSheet;
-import be.planetegem.mammon.util.JFontLabel;
-import be.planetegem.mammon.util.JResizedImage;
-import be.planetegem.mammon.util.JSmallButton;
+import be.planetegem.mammon.util.ResizedImage;
+import be.planetegem.mammon.util.ui.JFontLabel;
+import be.planetegem.mammon.util.ui.JSmallButton;
 
 public class ProfileManagerUI extends JPanel {
 
@@ -93,21 +93,23 @@ public class ProfileManagerUI extends JPanel {
         this.lang = lang;
 
         // Address label
-        String str = currentProfile.get("STREETNAME") + " " + currentProfile.get("HOUSENUMBER");
-        if (!currentProfile.get("BOXNUMBER").equals("")){
-            str += " " + currentProfile.get("BOXNUMBER");
-        }
-        str += ", " + currentProfile.get("POSTALCODE") + " " + currentProfile.get("PLACENAME");
-        if (currentProfile.get("COUNTRYNAME").equals("België")){
-            str += " - " + LanguageFile.belgium[lang];
-        } else {
-            str += " - " + currentProfile.get("COUNTRYNAME");
-        }
-        addressLabel.setText(str);
+        if (currentProfile.size() > 0){
+            String str = currentProfile.get("STREETNAME") + " " + currentProfile.get("HOUSENUMBER");
+            if (!currentProfile.get("BOXNUMBER").equals("")){
+                str += " " + currentProfile.get("BOXNUMBER");
+            }
+            str += ", " + currentProfile.get("POSTALCODE") + " " + currentProfile.get("PLACENAME");
+            if (currentProfile.get("COUNTRYNAME").equals("België")){
+                str += " - " + LanguageFile.belgium[lang];
+            } else {
+                str += " - " + currentProfile.get("COUNTRYNAME");
+            }
+            addressLabel.setText(str);
 
-        // Vat label
-        str = LanguageFile.vat[lang] + " " + currentProfile.get("VATNUMBER");
-        vatLabel.setText(str);
+            // Vat label
+            str = LanguageFile.vat[lang] + " " + currentProfile.get("VATNUMBER");
+            vatLabel.setText(str);
+        }
     }
 
     // Clear 'canvas': called every time profiles are loaded
@@ -120,16 +122,16 @@ public class ProfileManagerUI extends JPanel {
         clearPreview();
 
         this.logoAvailable = true; // Checks if logo path is valid
-        this.imageDimensions[0] = DocumentConstraints.lineWidth*DocumentConstraints.previewRatio;
-        this.imageDimensions[1] = (int) Math.round(DocumentConstraints.lineHeight*DocumentConstraints.previewRatio*1.5);
+        this.imageDimensions[0] = DocConstraints.lineWidth*DocConstraints.previewRatio;
+        this.imageDimensions[1] = (int) Math.round(DocConstraints.lineHeight*DocConstraints.previewRatio*1.5);
             
         if (!currentProfile.get("LOGOPATH").equals("")){
             db.logEvent("Profile manager is loading image from path: " + currentProfile.get("LOGOPATH"));
             try {
-                JResizedImage image = new JResizedImage(
+                ResizedImage image = new ResizedImage(
                     currentProfile.get("LOGOPATH"), 
-                    DocumentConstraints.logoWidth*DocumentConstraints.previewRatio, 
-                    DocumentConstraints.logoHeight*DocumentConstraints.previewRatio
+                    DocConstraints.logoWidth*DocConstraints.previewRatio, 
+                    DocConstraints.logoHeight*DocConstraints.previewRatio
                 );
                 imageDimensions[0] = image.width;
                 imageDimensions[1] = image.height;
@@ -140,8 +142,8 @@ public class ProfileManagerUI extends JPanel {
 
                 // Position image
                 logo.setBounds(
-                    (int) Math.round((DocumentConstraints.lineWidth*DocumentConstraints.previewRatio - image.width)*0.5), 
-                    DocumentConstraints.halfLine*DocumentConstraints.previewRatio, 
+                    (int) Math.round((DocConstraints.lineWidth*DocConstraints.previewRatio - image.width)*0.5), 
+                    DocConstraints.halfLine*DocConstraints.previewRatio, 
                     image.width, 
                     image.height
                 );
@@ -162,7 +164,7 @@ public class ProfileManagerUI extends JPanel {
             logo.setFont(StyleSheet.logoFont);
             logo.setBounds(
                 0, 
-                DocumentConstraints.halfLine*DocumentConstraints.previewRatio,
+                DocConstraints.halfLine*DocConstraints.previewRatio,
                 imageDimensions[0], 
                 imageDimensions[1]
             );
@@ -174,9 +176,9 @@ public class ProfileManagerUI extends JPanel {
         JPanel profileDetails = new JPanel();
         profileDetails.setBounds(
             0, 
-            imageDimensions[1] + DocumentConstraints.lineHeight*DocumentConstraints.previewRatio, 
-            DocumentConstraints.lineWidth*DocumentConstraints.previewRatio, 
-            (DocumentConstraints.lineHeight + DocumentConstraints.halfLine)*DocumentConstraints.previewRatio
+            imageDimensions[1] + DocConstraints.lineHeight*DocConstraints.previewRatio, 
+            DocConstraints.lineWidth*DocConstraints.previewRatio, 
+            (DocConstraints.lineHeight + DocConstraints.halfLine)*DocConstraints.previewRatio
         );
         profileDetails.setBackground(Color.white);
         profilePreview.add(profileDetails);
@@ -231,8 +233,8 @@ public class ProfileManagerUI extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.white);
         Dimension mainPanelSize = new Dimension(
-            DocumentConstraints.a4Width*DocumentConstraints.previewRatio, 
-            (DocumentConstraints.profileHeight + DocumentConstraints.lineHeight)*DocumentConstraints.previewRatio
+            DocConstraints.a4Width*DocConstraints.previewRatio, 
+            (DocConstraints.profileHeight + DocConstraints.lineHeight)*DocConstraints.previewRatio
         );
         setMinimumSize(mainPanelSize);
         setPreferredSize(mainPanelSize);
@@ -240,8 +242,8 @@ public class ProfileManagerUI extends JPanel {
 
         profileButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         Dimension buttonPanelSize = new Dimension(
-            DocumentConstraints.lineWidth*DocumentConstraints.previewRatio, 
-            DocumentConstraints.lineHeight*DocumentConstraints.previewRatio
+            DocConstraints.lineWidth*DocConstraints.previewRatio, 
+            DocConstraints.lineHeight*DocConstraints.previewRatio
         );
         profileButtons.setPreferredSize(buttonPanelSize);
         profileButtons.setMaximumSize(buttonPanelSize);
@@ -270,8 +272,8 @@ public class ProfileManagerUI extends JPanel {
         profilePreview = new JPanel();
         profilePreview.setLayout(null);
         Dimension previewPanelSize = new Dimension(
-            DocumentConstraints.lineWidth*DocumentConstraints.previewRatio, 
-            DocumentConstraints.profileHeight*DocumentConstraints.previewRatio
+            DocConstraints.lineWidth*DocConstraints.previewRatio, 
+            DocConstraints.profileHeight*DocConstraints.previewRatio
         );
         profilePreview.setPreferredSize(previewPanelSize);
         profilePreview.setMaximumSize(previewPanelSize);

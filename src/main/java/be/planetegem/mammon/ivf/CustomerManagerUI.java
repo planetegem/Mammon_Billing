@@ -1,4 +1,4 @@
-package be.planetegem.mammon.invoice;
+package be.planetegem.mammon.ivf;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -14,10 +14,10 @@ import javax.swing.SwingConstants;
 
 import be.planetegem.mammon.Mammon;
 import be.planetegem.mammon.db.DbConsole;
-import be.planetegem.mammon.statics.DocumentConstraints;
+import be.planetegem.mammon.statics.DocConstraints;
 import be.planetegem.mammon.statics.LanguageFile;
 import be.planetegem.mammon.statics.StyleSheet;
-import be.planetegem.mammon.util.JSmallButton;
+import be.planetegem.mammon.util.ui.JSmallButton;
 
 public class CustomerManagerUI extends JPanel {
 
@@ -117,8 +117,8 @@ public class CustomerManagerUI extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.white);
         Dimension mainPanelSize = new Dimension(
-            DocumentConstraints.a4Width*DocumentConstraints.previewRatio, 
-            (DocumentConstraints.customerHeight + DocumentConstraints.lineHeight)*DocumentConstraints.previewRatio
+            DocConstraints.a4Width*DocConstraints.previewRatio, 
+            (DocConstraints.customerHeight + DocConstraints.lineHeight)*DocConstraints.previewRatio
         );
         setPreferredSize(mainPanelSize);
         setMaximumSize(mainPanelSize);
@@ -126,8 +126,8 @@ public class CustomerManagerUI extends JPanel {
 
         customerButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         Dimension buttonPanelSize = new Dimension(
-            DocumentConstraints.lineWidth*DocumentConstraints.previewRatio, 
-            DocumentConstraints.lineHeight*DocumentConstraints.previewRatio
+            DocConstraints.lineWidth*DocConstraints.previewRatio, 
+            DocConstraints.lineHeight*DocConstraints.previewRatio
         );
         customerButtons.setPreferredSize(buttonPanelSize);
         customerButtons.setMaximumSize(buttonPanelSize);
@@ -156,8 +156,8 @@ public class CustomerManagerUI extends JPanel {
         customerPreview = new JPanel();
         customerPreview.setLayout(null);
         Dimension previewPanelSize = new Dimension(
-            DocumentConstraints.lineWidth*DocumentConstraints.previewRatio, 
-            DocumentConstraints.profileHeight*DocumentConstraints.previewRatio
+            DocConstraints.lineWidth*DocConstraints.previewRatio, 
+            DocConstraints.profileHeight*DocConstraints.previewRatio
         );
         customerPreview.setPreferredSize(previewPanelSize);
         customerPreview.setMaximumSize(previewPanelSize);
@@ -167,10 +167,10 @@ public class CustomerManagerUI extends JPanel {
 
         customerHeader = new JLabel();
         customerHeader.setBounds(
-            DocumentConstraints.customerLeadingWidth*DocumentConstraints.previewRatio, 
+            DocConstraints.customerLeadingWidth*DocConstraints.previewRatio, 
             0,
-            DocumentConstraints.customerHeaderWidth*DocumentConstraints.previewRatio, 
-            DocumentConstraints.customerHeight*DocumentConstraints.previewRatio
+            DocConstraints.customerHeaderWidth*DocConstraints.previewRatio, 
+            DocConstraints.customerHeight*DocConstraints.previewRatio
         );
         customerHeader.setHorizontalAlignment(SwingConstants.LEFT);
         customerHeader.setVerticalAlignment(SwingConstants.TOP);
@@ -179,10 +179,10 @@ public class CustomerManagerUI extends JPanel {
 
         customerDetails = new JLabel();
         customerDetails.setBounds(
-            (DocumentConstraints.customerLeadingWidth + DocumentConstraints.customerHeaderWidth)*DocumentConstraints.previewRatio, 
+            (DocConstraints.customerLeadingWidth + DocConstraints.customerHeaderWidth)*DocConstraints.previewRatio, 
             0,
-            DocumentConstraints.customerBodyWidth*DocumentConstraints.previewRatio, 
-            DocumentConstraints.customerHeight*DocumentConstraints.previewRatio
+            DocConstraints.customerBodyWidth*DocConstraints.previewRatio, 
+            DocConstraints.customerHeight*DocConstraints.previewRatio
         );
         customerDetails.setHorizontalAlignment(SwingConstants.LEFT);
         customerDetails.setVerticalAlignment(SwingConstants.TOP);

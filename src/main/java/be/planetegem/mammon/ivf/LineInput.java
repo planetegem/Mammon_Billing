@@ -1,4 +1,4 @@
-package be.planetegem.mammon.invoice;
+package be.planetegem.mammon.ivf;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -18,11 +18,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 
-import be.planetegem.mammon.statics.DocumentConstraints;
+import be.planetegem.mammon.statics.DocConstraints;
 import be.planetegem.mammon.statics.StyleSheet;
-import be.planetegem.mammon.util.JBlinkingLabel;
-import be.planetegem.mammon.util.JDateField;
-import be.planetegem.mammon.util.JSmallButton;
+import be.planetegem.mammon.util.ui.JBlinkingLabel;
+import be.planetegem.mammon.util.ui.JDateField;
+import be.planetegem.mammon.util.ui.JSmallButton;
 
 public class LineInput extends JPanel implements ActionListener{
 
@@ -99,8 +99,8 @@ public class LineInput extends JPanel implements ActionListener{
         blinkLabel.setFont(StyleSheet.captionFont);
         header.add(blinkLabel);
         Dimension containerSize = new Dimension(
-            DocumentConstraints.lineWidth*DocumentConstraints.previewRatio,
-            DocumentConstraints.halfLine*DocumentConstraints.previewRatio
+            DocConstraints.lineWidth*DocConstraints.previewRatio,
+            DocConstraints.halfLine*DocConstraints.previewRatio
         );
         header.setPreferredSize(containerSize);
         header.setMaximumSize(containerSize);
@@ -117,8 +117,8 @@ public class LineInput extends JPanel implements ActionListener{
 
         descriptionContainer = new JPanel();
         containerSize = new Dimension(
-            DocumentConstraints.tDescription*DocumentConstraints.previewRatio,
-            DocumentConstraints.lineHeight*DocumentConstraints.previewRatio
+            DocConstraints.tDescription*DocConstraints.previewRatio,
+            DocConstraints.lineHeight*DocConstraints.previewRatio
         );
         descriptionContainer.setPreferredSize(containerSize);
         descriptionContainer.setBackground(Color.white);
@@ -128,8 +128,8 @@ public class LineInput extends JPanel implements ActionListener{
 
         dateContainer = new JPanel();
         containerSize = new Dimension(
-            DocumentConstraints.tDate*DocumentConstraints.previewRatio,
-            DocumentConstraints.lineHeight*DocumentConstraints.previewRatio
+            DocConstraints.tDate*DocConstraints.previewRatio,
+            DocConstraints.lineHeight*DocConstraints.previewRatio
         );
         dateContainer.setPreferredSize(containerSize);
         dateContainer.setBackground(Color.white);
@@ -139,8 +139,8 @@ public class LineInput extends JPanel implements ActionListener{
 
         amountContainer = new JPanel();
         containerSize = new Dimension(
-            DocumentConstraints.tNumber*DocumentConstraints.previewRatio,
-            DocumentConstraints.lineHeight*DocumentConstraints.previewRatio
+            DocConstraints.tNumber*DocConstraints.previewRatio,
+            DocConstraints.lineHeight*DocConstraints.previewRatio
         );
         amountContainer.setPreferredSize(containerSize);
         amountContainer.setBackground(Color.white);
@@ -149,8 +149,8 @@ public class LineInput extends JPanel implements ActionListener{
 
         priceContainer = new JPanel();
         containerSize = new Dimension(
-            DocumentConstraints.tPrice*DocumentConstraints.previewRatio,
-            DocumentConstraints.lineHeight*DocumentConstraints.previewRatio
+            DocConstraints.tPrice*DocConstraints.previewRatio,
+            DocConstraints.lineHeight*DocConstraints.previewRatio
         );
         priceContainer.setPreferredSize(containerSize);
         priceContainer.setBackground(Color.white);
@@ -159,8 +159,8 @@ public class LineInput extends JPanel implements ActionListener{
 
         totalContainer = new JPanel();
         containerSize = new Dimension(
-            DocumentConstraints.tTotal*DocumentConstraints.previewRatio,
-            DocumentConstraints.lineHeight*DocumentConstraints.previewRatio
+            DocConstraints.tTotal*DocConstraints.previewRatio,
+            DocConstraints.lineHeight*DocConstraints.previewRatio
         );
         totalContainer.setPreferredSize(containerSize);
         totalContainer.setBackground(Color.white);

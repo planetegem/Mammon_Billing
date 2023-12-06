@@ -1,4 +1,4 @@
-package be.planetegem.mammon.invoice;
+package be.planetegem.mammon.ivf;
 
 import java.util.HashMap;
 

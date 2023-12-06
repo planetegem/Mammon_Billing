@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import be.planetegem.mammon.db.DbConsole;
-import be.planetegem.mammon.invoice.InvoiceFactory;
+import be.planetegem.mammon.ivf.InvoiceFactory;
 import be.planetegem.mammon.statics.StyleSheet;
 import be.planetegem.mammon.wizards.CustomerWizard;
 import be.planetegem.mammon.wizards.ProfileWizard;
@@ -27,11 +27,11 @@ public class Mammon extends JFrame implements ActionListener
 {   
     // Main components:
     private DbConsole db; // Manages database interactions 
-    private InvoiceFactory ivf;
+    private InvoiceFactory ivf; // composes invoice 
     private ProfileWizard pw; // Profile creation interface
     private CustomerWizard cw; // Customer creation interface
     private IntroSplash splash; // Welcome screen
-    private PdfPenman pdfPen;
+    private PdfPenman pdfPen; // holds logic to generate pdf
 
     private JDesktopPane cPane; // Main content pane (for internal frame management)
     private JMenuItem infoItem, consoleItem; // Menu items

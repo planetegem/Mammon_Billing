@@ -1,4 +1,4 @@
-package be.planetegem.mammon.invoice;
+package be.planetegem.mammon.ivf;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -13,13 +13,13 @@ import java.awt.FlowLayout;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import be.planetegem.mammon.statics.DocumentConstraints;
+import be.planetegem.mammon.statics.DocConstraints;
 import be.planetegem.mammon.statics.LanguageFile;
 import be.planetegem.mammon.statics.StyleSheet;
-import be.planetegem.mammon.util.JDateField;
-import be.planetegem.mammon.util.JDynamicField;
-import be.planetegem.mammon.util.JFontLabel;
-import be.planetegem.mammon.util.JSmallButton;
+import be.planetegem.mammon.util.ui.JDateField;
+import be.planetegem.mammon.util.ui.JDynamicField;
+import be.planetegem.mammon.util.ui.JFontLabel;
+import be.planetegem.mammon.util.ui.JSmallButton;
 
 public class InvoiceFactoryUI extends JPanel {
 
@@ -69,14 +69,13 @@ public class InvoiceFactoryUI extends JPanel {
         
         // 1. Main body = a4 simulation
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setPreferredSize(new Dimension((int) Math.round(DocumentConstraints.a4Width*4), (int) Math.round(DocumentConstraints.a4Height*4)));
 
         // 2. ProfileManager
         profileSection = new JPanel();
         profileSection.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
         Dimension profileSize = new Dimension(
-            DocumentConstraints.a4Width*DocumentConstraints.previewRatio, 
-            (DocumentConstraints.profileHeight + DocumentConstraints.lineHeight)*DocumentConstraints.previewRatio
+            DocConstraints.a4Width*DocConstraints.previewRatio, 
+            (DocConstraints.profileHeight + DocConstraints.lineHeight)*DocConstraints.previewRatio
         );
         profileSection.setMinimumSize(profileSize);
         profileSection.setPreferredSize(profileSize);
@@ -86,8 +85,8 @@ public class InvoiceFactoryUI extends JPanel {
         // 3. invoice Header: select type, location & date
         JPanel invoiceHeaderContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         Dimension invoiceHeaderContainerSize = new Dimension(
-            DocumentConstraints.a4Width*DocumentConstraints.previewRatio, 
-            DocumentConstraints.lineHeight*DocumentConstraints.previewRatio
+            DocConstraints.a4Width*DocConstraints.previewRatio, 
+            DocConstraints.lineHeight*DocConstraints.previewRatio
         );
         invoiceHeaderContainer.setPreferredSize(invoiceHeaderContainerSize);
         invoiceHeaderContainer.setMaximumSize(invoiceHeaderContainerSize);
@@ -97,8 +96,8 @@ public class InvoiceFactoryUI extends JPanel {
 
         JLabel padding1 = new JLabel();
         Dimension paddingSize = new Dimension(
-            DocumentConstraints.baseMargin*DocumentConstraints.previewRatio, 
-            DocumentConstraints.lineHeight*DocumentConstraints.previewRatio
+            DocConstraints.baseMargin*DocConstraints.previewRatio, 
+            DocConstraints.lineHeight*DocConstraints.previewRatio
         );
         padding1.setPreferredSize(paddingSize);
         invoiceHeaderContainer.add(padding1);
@@ -127,8 +126,8 @@ public class InvoiceFactoryUI extends JPanel {
         // 4. CustomerManager
         customerSection = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         Dimension customerSize = new Dimension(
-            DocumentConstraints.a4Width*DocumentConstraints.previewRatio, 
-            (DocumentConstraints.customerHeight + DocumentConstraints.lineHeight)*DocumentConstraints.previewRatio
+            DocConstraints.a4Width*DocConstraints.previewRatio, 
+            (DocConstraints.customerHeight + DocConstraints.lineHeight)*DocConstraints.previewRatio
         );
         customerSection.setPreferredSize(customerSize);
         customerSection.setMaximumSize(customerSize);
@@ -140,8 +139,8 @@ public class InvoiceFactoryUI extends JPanel {
         add(invoiceNumberContainer);
         invoiceNumberContainer.setBackground(Color.white);
         Dimension invoiceNumberSize = new Dimension(
-            DocumentConstraints.a4Width*DocumentConstraints.previewRatio, 
-            DocumentConstraints.invoiceNumberHeight*DocumentConstraints.previewRatio
+            DocConstraints.a4Width*DocConstraints.previewRatio, 
+            DocConstraints.invoiceNumberHeight*DocConstraints.previewRatio
         );
         invoiceNumberContainer.setPreferredSize(invoiceNumberSize);
         invoiceNumberContainer.setMaximumSize(invoiceNumberSize);
@@ -155,8 +154,8 @@ public class InvoiceFactoryUI extends JPanel {
         
         JLabel padding2 = new JLabel();
         paddingSize = new Dimension(
-            DocumentConstraints.invoiceNumberLeading*DocumentConstraints.previewRatio, 
-            DocumentConstraints.invoiceNumberHeight*DocumentConstraints.previewRatio
+            DocConstraints.invoiceNumberLeading*DocConstraints.previewRatio, 
+            DocConstraints.invoiceNumberHeight*DocConstraints.previewRatio
         );
         padding2.setPreferredSize(paddingSize);
         invoiceNumberContainer.add(padding2);
@@ -207,8 +206,8 @@ public class InvoiceFactoryUI extends JPanel {
 
         JLabel padding3 = new JLabel();
         paddingSize = new Dimension(
-            DocumentConstraints.baseMargin*DocumentConstraints.previewRatio, 
-            DocumentConstraints.invoiceNumberHeight*DocumentConstraints.previewRatio
+            DocConstraints.baseMargin*DocConstraints.previewRatio, 
+            DocConstraints.invoiceNumberHeight*DocConstraints.previewRatio
         );
         padding3.setPreferredSize(paddingSize);
         invoiceSelectorContainer.add(padding3);
@@ -216,11 +215,9 @@ public class InvoiceFactoryUI extends JPanel {
         // 6. Invoice lines
         tableSection = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         Dimension invoiceLinesSize = new Dimension(
-            DocumentConstraints.a4Width*DocumentConstraints.previewRatio, 
-            DocumentConstraints.invoiceTable*DocumentConstraints.previewRatio
+            DocConstraints.a4Width*DocConstraints.previewRatio, 
+            DocConstraints.invoiceTable*DocConstraints.previewRatio
         );
-        tableSection.setPreferredSize(invoiceLinesSize);
-        tableSection.setMaximumSize(invoiceLinesSize);
         tableSection.setMinimumSize(invoiceLinesSize);
         tableSection.setBackground(Color.white);
         add(tableSection);
@@ -228,8 +225,8 @@ public class InvoiceFactoryUI extends JPanel {
         // 7. Invoice payment
         JPanel paymentContainer = new JPanel();
         Dimension paymentSize = new Dimension(
-            DocumentConstraints.a4Width*DocumentConstraints.previewRatio, 
-            DocumentConstraints.invoicePaymentHeight*DocumentConstraints.previewRatio
+            DocConstraints.a4Width*DocConstraints.previewRatio, 
+            DocConstraints.invoicePaymentHeight*DocConstraints.previewRatio
         );
         paymentContainer.setPreferredSize(paymentSize);
         paymentContainer.setMaximumSize(paymentSize);
@@ -241,8 +238,8 @@ public class InvoiceFactoryUI extends JPanel {
         JPanel payment1 = new JPanel();
         payment1.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
         Dimension lineSize = new Dimension(
-            DocumentConstraints.a4Width*DocumentConstraints.previewRatio, 
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            DocConstraints.a4Width*DocConstraints.previewRatio, 
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
         payment1.setPreferredSize(lineSize);
         payment1.setMaximumSize(lineSize);

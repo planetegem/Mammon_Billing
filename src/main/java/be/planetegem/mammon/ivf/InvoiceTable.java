@@ -1,4 +1,4 @@
-package be.planetegem.mammon.invoice;
+package be.planetegem.mammon.ivf;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -7,11 +7,14 @@ import java.util.HashMap;
 
 import javax.swing.JOptionPane;
 
+import be.planetegem.mammon.statics.DocConstraints;
 import be.planetegem.mammon.statics.LanguageFile;
 import be.planetegem.mammon.util.FormattedCell;
-import be.planetegem.mammon.util.FormattedTable;
+import be.planetegem.mammon.util.FormattedInvoice;
 
 public class InvoiceTable extends InvoiceTableUI implements ActionListener {
+
+    
 
     // getters for table and vat (used when saving invoice to db)
     public ArrayList<HashMap<String, String>> getTable(){
@@ -22,19 +25,16 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
     }
 
     // getter for formatted table (used when generating pdf)
-    public FormattedTable getFormattedTable(){
-        FormattedTable result = new FormattedTable(this.lang);
+    public FormattedInvoice getFormattedTable(){
+        FormattedInvoice result = new FormattedInvoice(this.lang);
+
         result.setDescriptionColumn(this.descriptionColumn);
         result.setDateColumn(this.dateColumn);
         result.setAmountColumn(this.amountColumn);
         result.setPriceColumn(this.priceColumn);
+        result.setTotalsColumn(this.totalColumn);
 
-        ArrayList<String> strTotalColumn = new ArrayList<String>();
-        for (float total : totalColumn){
-            String strTotal = String.format("%.2f", total) + " € ";
-            strTotalColumn.add(strTotal);
-        }
-        result.setTotalsColumn(strTotalColumn);
+        result.setLineCount(this.tableLines);
 
         ArrayList<String> subtotals = new ArrayList<String>();
         subtotals.add(LanguageFile.sTotal[lang]);
@@ -52,7 +52,6 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
         subtotals.add(String.format("%.2f", subtotalWithVat).replace(".", ",") + " € ");
         subtotals.add(LanguageFile.fTotal[lang]);
         subtotals.add(String.format("%.2f", finalTotal).replace(".", ",") + " € ");
-        System.out.println(subtotals);
         result.setSubtotals(subtotals);
 
         return result;
@@ -89,8 +88,6 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
                 entry.put("price", newPrice);
             }
         }
-
-
         // Delete all lines from db
         db.clearInvoiceLines(tableArray.get(0));
         // Add new lines
@@ -115,16 +112,54 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
         dateColumn = new ArrayList<FormattedCell>();
         amountColumn = new ArrayList<FormattedCell>();
         priceColumn = new ArrayList<FormattedCell>();
-        totalColumn = new ArrayList<Float>();
+        totalColumn = new ArrayList<FormattedCell>();
 
-        // loop through tableArray: combine cells if previous one was the same
+        // Step 1: prepare descriptionColumn; combine cells if previous cell was the same
         for (int i = 0; i < tableArray.size(); i++){
             // Convert first line faithfully
             if (i == 0){
                 String content = tableArray.get(i).get("description");
                 descriptionColumn.add(new FormattedCell(i, 1, content));
 
-                content = tableArray.get(i).get("date");
+            } else {
+                // Compare against previous values
+                String content;
+                if (tableArray.get(i).get("description").equals(tableArray.get(i - 1).get("description"))){
+                    descriptionColumn.get(descriptionColumn.size() - 1).height++;
+                } else {
+                    content = tableArray.get(i).get("description");
+                    descriptionColumn.add(new FormattedCell(i, 1, content));
+                }
+            }
+        }
+        // Step 2: check if descriptions fit in their container; keep track of offsets
+        int lineOffset = 0;
+        HashMap<Integer, Integer> offsets = new HashMap<Integer, Integer>();
+        
+        for (int i = 0; i < descriptionColumn.size(); i++){
+            int lineCount = descriptionColumn.get(i).lineCount(DocConstraints.tDescription*DocConstraints.previewRatio);
+            int currentLine = descriptionColumn.get(i).y;
+            
+            descriptionColumn.get(i).y += lineOffset;
+
+            if (lineCount > descriptionColumn.get(i).height){
+                int diff = lineCount - descriptionColumn.get(i).height;
+                offsets.put(currentLine + descriptionColumn.get(i).height, diff);
+
+                descriptionColumn.get(i).height += diff;
+                lineOffset += diff;
+            }
+        }
+        tableLines = tableArray.size() + lineOffset;
+
+        // loop through tableArray: combine cells if previous one was the same
+        lineOffset = 0;
+
+        for (int i = 0; i < tableArray.size(); i++){
+            // Convert first line faithfully
+            int heightOffset = 0;
+            if (i == 0){
+                String content = tableArray.get(i).get("date");
                 dateColumn.add(new FormattedCell(i, 1, content));
 
                 content = tableArray.get(i).get("amount");
@@ -137,42 +172,41 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
                 content = tableArray.get(i).get("price");
                 priceColumn.add(new FormattedCell(i, 1, content + " €"));
             } else {
-                // Compare against previous values
-                String content;
-                if (tableArray.get(i).get("description").equals(tableArray.get(i - 1).get("description"))){
-                    descriptionColumn.get(descriptionColumn.size() - 1).height++;
-                } else {
-                    content = tableArray.get(i).get("description");
-                    descriptionColumn.add(new FormattedCell(i, 1, content));
+                // check offsets
+                heightOffset = 0;
+                if (offsets.get(i + 1) != null){
+                    heightOffset = offsets.get(i + 1);
                 }
 
+                // Compare against previous values
+                String content;
                 if (tableArray.get(i).get("date").equals(tableArray.get(i - 1).get("date"))){
-                    dateColumn.get(dateColumn.size() - 1).height++;
+                    dateColumn.get(dateColumn.size() - 1).height += 1 + heightOffset;
                 } else {
                     content = tableArray.get(i).get("date");
-                    dateColumn.add(new FormattedCell(i, 1, content));
+                    dateColumn.add(new FormattedCell(i + lineOffset, 1 + heightOffset, content));
                 }
 
                 // Amount is always specified, except when NA
                 if (tableArray.get(i).get("amount").equals("/")){
                     if (tableArray.get(i - 1).get("amount").equals("/")){
-                        amountColumn.get(amountColumn.size() - 1).height++;
+                        amountColumn.get(amountColumn.size() - 1).height += 1 + heightOffset;
                     } else {
-                        amountColumn.add(new FormattedCell(i, 1, "/"));
+                        amountColumn.add(new FormattedCell(i + lineOffset, 1 + heightOffset, "/"));
                     }
                 } else {
                     content = tableArray.get(i).get("amount");
                     if (!tableArray.get(i).get("unit").equals("")){
                         content += " " + tableArray.get(i).get("unit");
                     }
-                    amountColumn.add(new FormattedCell(i, 1, content));
+                    amountColumn.add(new FormattedCell(i + lineOffset, 1 + heightOffset, content));
                 }
 
                 if (tableArray.get(i).get("price").equals(tableArray.get(i - 1).get("price"))){
-                    priceColumn.get(priceColumn.size() - 1).height++;
+                    priceColumn.get(priceColumn.size() - 1).height += 1 + heightOffset;
                 } else {
                     content = tableArray.get(i).get("price");
-                    priceColumn.add(new FormattedCell(i, 1, content + " €"));
+                    priceColumn.add(new FormattedCell(i + lineOffset, 1 + heightOffset, content + " €"));
                 }
             }
 
@@ -186,11 +220,12 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
             }
             String cleanPrice = tableArray.get(i).get("price").replace(",", ".");
             float priceFloat = Float.parseFloat(cleanPrice);
+            totalColumn.add(new FormattedCell(i + lineOffset, 1 + heightOffset, amountFloat*priceFloat));
 
-            totalColumn.add(amountFloat*priceFloat);
+            lineOffset += heightOffset;
         }
     }
-    
+        
     // called from factory when selecting invoice type
     public void setDirection(String direction){
         this.direction = direction;

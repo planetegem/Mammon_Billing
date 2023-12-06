@@ -1,4 +1,4 @@
-package be.planetegem.mammon.invoice;
+package be.planetegem.mammon.ivf;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -16,11 +16,11 @@ import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 
 import be.planetegem.mammon.db.DbConsole;
-import be.planetegem.mammon.statics.DocumentConstraints;
+import be.planetegem.mammon.statics.DocConstraints;
 import be.planetegem.mammon.statics.LanguageFile;
 import be.planetegem.mammon.statics.StyleSheet;
 import be.planetegem.mammon.util.FormattedCell;
-import be.planetegem.mammon.util.JSmallButton;
+import be.planetegem.mammon.util.ui.JSmallButton;
 
 public class InvoiceTableUI extends JPanel {
     protected InvoiceFactory parent;
@@ -46,7 +46,7 @@ public class InvoiceTableUI extends JPanel {
     protected ArrayList<FormattedCell> dateColumn;
     protected ArrayList<FormattedCell> amountColumn;
     protected ArrayList<FormattedCell> priceColumn;
-    protected ArrayList<Float> totalColumn;
+    protected ArrayList<FormattedCell> totalColumn;
 
     // to add new lines     
     protected boolean addingNewLine = false;
@@ -89,8 +89,8 @@ public class InvoiceTableUI extends JPanel {
     public void setTotals() {
         if (tableArray.size() > 0){
             subtotal = 0;
-            for (Float number : totalColumn){
-                subtotal += number;
+            for (FormattedCell cell : totalColumn){
+                subtotal += cell.value;
             }
             String label = String.format("%.2f", subtotal).replace(".", ",") + " € ";
             subtotalLabel.setText(label);
@@ -122,57 +122,68 @@ public class InvoiceTableUI extends JPanel {
 
         tableBody.setBounds(
             0, 
-            DocumentConstraints.tHeaderHeight*DocumentConstraints.previewRatio,
-            DocumentConstraints.lineWidth*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio*tableLines
+            DocConstraints.tHeaderHeight*DocConstraints.previewRatio,
+            DocConstraints.lineWidth*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio*tableLines
         );
 
         // Keep track of current Y value beneath table
-        int currentY = DocumentConstraints.tHeaderHeight + DocumentConstraints.softLine*tableLines + DocumentConstraints.halfLine;
+        int currentY = DocConstraints.tHeaderHeight + DocConstraints.softLine*tableLines + DocConstraints.halfLine;
         subtotalContainer.setBounds(
-            (DocumentConstraints.lineWidth - DocumentConstraints.tSubtotalWidth)*DocumentConstraints.previewRatio, 
-            currentY*DocumentConstraints.previewRatio,
-            DocumentConstraints.tSubtotalWidth*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            (DocConstraints.lineWidth - DocConstraints.tSubtotalWidth)*DocConstraints.previewRatio, 
+            currentY*DocConstraints.previewRatio,
+            DocConstraints.tSubtotalWidth*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
 
         buttonContainer.setBounds(
             0, 
-            currentY*DocumentConstraints.previewRatio,
-            (DocumentConstraints.lineWidth - DocumentConstraints.tSubtotalWidth)*DocumentConstraints.previewRatio,
-            DocumentConstraints.lineHeight*DocumentConstraints.previewRatio
+            currentY*DocConstraints.previewRatio,
+            (DocConstraints.lineWidth - DocConstraints.tSubtotalWidth)*DocConstraints.previewRatio,
+            DocConstraints.lineHeight*DocConstraints.previewRatio
         );
 
-        currentY += DocumentConstraints.softLine;
+        currentY += DocConstraints.softLine;
         vatContainer.setBounds(
-            (DocumentConstraints.lineWidth - DocumentConstraints.tSubtotalWidth)*DocumentConstraints.previewRatio, 
-            currentY*DocumentConstraints.previewRatio,
-            DocumentConstraints.tSubtotalWidth*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            (DocConstraints.lineWidth - DocConstraints.tSubtotalWidth)*DocConstraints.previewRatio, 
+            currentY*DocConstraints.previewRatio,
+            DocConstraints.tSubtotalWidth*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
 
-        currentY += DocumentConstraints.softLine;
+        currentY += DocConstraints.softLine;
 
         if (vatSelector.getSelectedItem().toString().equals("0%")){
             reverseChargeContainer.setBounds(
-                (DocumentConstraints.lineWidth - DocumentConstraints.tSubtotalWidth*2)*DocumentConstraints.previewRatio, 
-                currentY*DocumentConstraints.previewRatio,
-                DocumentConstraints.tSubtotalWidth*DocumentConstraints.previewRatio*2,
-                DocumentConstraints.softLine*DocumentConstraints.previewRatio*3
+                (DocConstraints.lineWidth - DocConstraints.tSubtotalWidth*2)*DocConstraints.previewRatio, 
+                currentY*DocConstraints.previewRatio,
+                DocConstraints.tSubtotalWidth*DocConstraints.previewRatio*2,
+                DocConstraints.softLine*DocConstraints.previewRatio*3
             );
             reverseChargeContainer.setVisible(true);
-            currentY += DocumentConstraints.previewRatio*3;
+            currentY += DocConstraints.previewRatio*3;
         } else {
             reverseChargeContainer.setVisible(false);
         }
 
-        currentY += DocumentConstraints.softLine;
+        currentY += DocConstraints.softLine;
         finalTotalContainer.setBounds(
-            (DocumentConstraints.lineWidth - DocumentConstraints.tSubtotalWidth)*DocumentConstraints.previewRatio, 
-            currentY*DocumentConstraints.previewRatio,
-            DocumentConstraints.tSubtotalWidth*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            (DocConstraints.lineWidth - DocConstraints.tSubtotalWidth)*DocConstraints.previewRatio, 
+            currentY*DocConstraints.previewRatio,
+            DocConstraints.tSubtotalWidth*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
+
+        currentY += DocConstraints.softLine*4;
+        int tableHeight = Math.max(
+            DocConstraints.invoiceTable*DocConstraints.previewRatio,
+            currentY*DocConstraints.previewRatio
+        );
+        Dimension sectionSize = new Dimension(
+            DocConstraints.lineWidth*DocConstraints.previewRatio, 
+            tableHeight
+        );
+        setPreferredSize(sectionSize);
 
         repaint();
         revalidate();
@@ -189,16 +200,15 @@ public class InvoiceTableUI extends JPanel {
 
     // add LineMaker to table body; if table body remains empty, draw empty field
     protected void setLineCreator(){
-        this.tableLines = tableArray.size();
             
         // Add 2 table lines if in process of adding new line
         if (addingNewLine){
             tableBody.add(lineCreator);
             lineCreator.setBounds(
                 0, 
-                tableLines*DocumentConstraints.softLine*DocumentConstraints.previewRatio,
-                DocumentConstraints.lineWidth*DocumentConstraints.previewRatio,
-                DocumentConstraints.softLine*DocumentConstraints.previewRatio*2
+                tableLines*DocConstraints.softLine*DocConstraints.previewRatio,
+                DocConstraints.lineWidth*DocConstraints.previewRatio,
+                DocConstraints.softLine*DocConstraints.previewRatio*2
             );
             this.tableLines += 2;
         }
@@ -222,7 +232,6 @@ public class InvoiceTableUI extends JPanel {
         tableBody.setBorder(null);
 
         // Check number of table lines in array
-        this.tableLines = tableArray.size();
         db.logEvent("Setting table body: currently counting " + tableLines + " lines");
 
         if (tableLines > 0){
@@ -233,8 +242,8 @@ public class InvoiceTableUI extends JPanel {
             drawnTable.setBackground(Color.white);
             drawnTable.setBounds(
                 0, 0,
-                DocumentConstraints.lineWidth*DocumentConstraints.previewRatio,
-                DocumentConstraints.softLine*DocumentConstraints.previewRatio*tableLines
+                DocConstraints.lineWidth*DocConstraints.previewRatio,
+                DocConstraints.softLine*DocConstraints.previewRatio*tableLines
             );
 
             for (FormattedCell cell : descriptionColumn){
@@ -242,71 +251,70 @@ public class InvoiceTableUI extends JPanel {
                 tempDescription.setFont(StyleSheet.documentFont);
                 tempDescription.setBounds(
                     0, 
-                    cell.y*DocumentConstraints.softLine*DocumentConstraints.previewRatio,
-                    DocumentConstraints.tDescription*DocumentConstraints.previewRatio,
-                    cell.height*DocumentConstraints.softLine*DocumentConstraints.previewRatio
+                    cell.y*DocConstraints.softLine*DocConstraints.previewRatio,
+                    DocConstraints.tDescription*DocConstraints.previewRatio,
+                    cell.height*DocConstraints.softLine*DocConstraints.previewRatio
                 );
                 Border border = BorderFactory.createMatteBorder(0, 1, 1, 1, Color.black);
                 tempDescription.setBorder(border);
                 drawnTable.add(tempDescription);
             }
 
-            int currentX = DocumentConstraints.tDescription*DocumentConstraints.previewRatio;
+            int currentX = DocConstraints.tDescription*DocConstraints.previewRatio;
             for (FormattedCell cell : dateColumn){
                 JLabel tempDate = new JLabel(cell.string, SwingConstants.CENTER);
                 tempDate.setFont(StyleSheet.documentFont);
                 tempDate.setBounds(
                     currentX, 
-                    cell.y*DocumentConstraints.softLine*DocumentConstraints.previewRatio,
-                    DocumentConstraints.tDate*DocumentConstraints.previewRatio,
-                    cell.height*DocumentConstraints.softLine*DocumentConstraints.previewRatio
+                    cell.y*DocConstraints.softLine*DocConstraints.previewRatio,
+                    DocConstraints.tDate*DocConstraints.previewRatio,
+                    cell.height*DocConstraints.softLine*DocConstraints.previewRatio
                 );
                 Border border = BorderFactory.createMatteBorder(0, 0, 1, 1, Color.black);
                 tempDate.setBorder(border);
                 drawnTable.add(tempDate);
             }
 
-            currentX += DocumentConstraints.tDate*DocumentConstraints.previewRatio;
+            currentX += DocConstraints.tDate*DocConstraints.previewRatio;
             for (FormattedCell cell : amountColumn){
                 JLabel tempAmount = new JLabel(cell.string, SwingConstants.CENTER);
                 tempAmount.setFont(StyleSheet.documentFont);
                 tempAmount.setBounds(
                     currentX, 
-                    cell.y*DocumentConstraints.softLine*DocumentConstraints.previewRatio,
-                    DocumentConstraints.tNumber*DocumentConstraints.previewRatio,
-                    cell.height*DocumentConstraints.softLine*DocumentConstraints.previewRatio
+                    cell.y*DocConstraints.softLine*DocConstraints.previewRatio,
+                    DocConstraints.tNumber*DocConstraints.previewRatio,
+                    cell.height*DocConstraints.softLine*DocConstraints.previewRatio
                 );
                 Border border = BorderFactory.createMatteBorder(0, 0, 1, 1, Color.black);
                 tempAmount.setBorder(border);
                 drawnTable.add(tempAmount);
             }
 
-            currentX += DocumentConstraints.tNumber*DocumentConstraints.previewRatio;
+            currentX += DocConstraints.tNumber*DocConstraints.previewRatio;
             for (FormattedCell cell : priceColumn){
                 JLabel tempPrice = new JLabel(cell.string, SwingConstants.CENTER);
                 tempPrice.setFont(StyleSheet.documentFont);
                 tempPrice.setBounds(
                     currentX, 
-                    cell.y*DocumentConstraints.softLine*DocumentConstraints.previewRatio,
-                    DocumentConstraints.tPrice*DocumentConstraints.previewRatio,
-                    cell.height*DocumentConstraints.softLine*DocumentConstraints.previewRatio
+                    cell.y*DocConstraints.softLine*DocConstraints.previewRatio,
+                    DocConstraints.tPrice*DocConstraints.previewRatio,
+                    cell.height*DocConstraints.softLine*DocConstraints.previewRatio
                 );
                 Border border = BorderFactory.createMatteBorder(0, 0, 1, 1, Color.black);
                 tempPrice.setBorder(border);
                 drawnTable.add(tempPrice);
             }
 
-            currentX += DocumentConstraints.tPrice*DocumentConstraints.previewRatio;
-            for (int i = 0; i < totalColumn.size(); i++){
-                String content = String.format("%.2f",totalColumn.get(i)) + " € ";
-                content = content.replace(".", ",");
-                JLabel tempTotal = new JLabel(content, SwingConstants.RIGHT);
+            currentX += DocConstraints.tPrice*DocConstraints.previewRatio;
+            for (FormattedCell cell : totalColumn){
+                cell.string += " € ";
+                JLabel tempTotal = new JLabel(cell.string, SwingConstants.CENTER);
                 tempTotal.setFont(StyleSheet.documentFont);
                 tempTotal.setBounds(
                     currentX, 
-                    i*DocumentConstraints.softLine*DocumentConstraints.previewRatio,
-                    DocumentConstraints.tTotal*DocumentConstraints.previewRatio,
-                    DocumentConstraints.softLine*DocumentConstraints.previewRatio
+                    cell.y*DocConstraints.softLine*DocConstraints.previewRatio,
+                    DocConstraints.tTotal*DocConstraints.previewRatio,
+                    cell.height*DocConstraints.softLine*DocConstraints.previewRatio
                 );
                 Border border = BorderFactory.createMatteBorder(0, 0, 1, 1, Color.black);
                 tempTotal.setBorder(border);
@@ -321,12 +329,6 @@ public class InvoiceTableUI extends JPanel {
     // Constructor prepares table headers & containers for table body, buttons, subtotals & totals
     protected InvoiceTableUI(){
         super();
-
-        Dimension sectionSize = new Dimension(
-            DocumentConstraints.lineWidth*DocumentConstraints.previewRatio, 
-            DocumentConstraints.invoiceTable*DocumentConstraints.previewRatio
-        );
-        setPreferredSize(sectionSize);
         setLayout(null);
         setBackground(Color.white);
 
@@ -335,8 +337,8 @@ public class InvoiceTableUI extends JPanel {
         tableHeader.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
         tableHeader.setBounds(
             0, 0,
-            DocumentConstraints.lineWidth*DocumentConstraints.previewRatio,
-            DocumentConstraints.tHeaderHeight*DocumentConstraints.previewRatio
+            DocConstraints.lineWidth*DocConstraints.previewRatio,
+            DocConstraints.tHeaderHeight*DocConstraints.previewRatio
         );
         tableHeader.setBackground(Color.white);
         add(tableHeader);
@@ -344,8 +346,8 @@ public class InvoiceTableUI extends JPanel {
         headerDescription = new JLabel(LanguageFile.descr[lang], SwingConstants.CENTER);
         headerDescription.setFont(StyleSheet.documentFont);
         Dimension headerSize = new Dimension(
-            DocumentConstraints.tDescription*DocumentConstraints.previewRatio,
-            DocumentConstraints.tHeaderHeight*DocumentConstraints.previewRatio
+            DocConstraints.tDescription*DocConstraints.previewRatio,
+            DocConstraints.tHeaderHeight*DocConstraints.previewRatio
         );
         headerDescription.setPreferredSize(headerSize);
         Border border = BorderFactory.createMatteBorder(1, 1, 1, 1, Color.black);
@@ -355,8 +357,8 @@ public class InvoiceTableUI extends JPanel {
         headerDate = new JLabel(LanguageFile.date[lang], SwingConstants.CENTER);
         headerDate.setFont(StyleSheet.documentFont);
         headerSize = new Dimension(
-            DocumentConstraints.tDate*DocumentConstraints.previewRatio,
-            DocumentConstraints.tHeaderHeight*DocumentConstraints.previewRatio
+            DocConstraints.tDate*DocConstraints.previewRatio,
+            DocConstraints.tHeaderHeight*DocConstraints.previewRatio
         );
         headerDate.setPreferredSize(headerSize);
         border = BorderFactory.createMatteBorder(1, 0, 1, 1, Color.black);
@@ -366,8 +368,8 @@ public class InvoiceTableUI extends JPanel {
         headerAmount = new JLabel(LanguageFile.amount[lang], SwingConstants.CENTER);
         headerAmount.setFont(StyleSheet.documentFont);
         headerSize = new Dimension(
-            DocumentConstraints.tNumber*DocumentConstraints.previewRatio,
-            DocumentConstraints.tHeaderHeight*DocumentConstraints.previewRatio
+            DocConstraints.tNumber*DocConstraints.previewRatio,
+            DocConstraints.tHeaderHeight*DocConstraints.previewRatio
         );
         headerAmount.setPreferredSize(headerSize);
         headerAmount.setBorder(border);
@@ -376,8 +378,8 @@ public class InvoiceTableUI extends JPanel {
         headerPrice = new JLabel(LanguageFile.price[lang], SwingConstants.CENTER);
         headerPrice.setFont(StyleSheet.documentFont);
         headerSize = new Dimension(
-            DocumentConstraints.tPrice*DocumentConstraints.previewRatio,
-            DocumentConstraints.tHeaderHeight*DocumentConstraints.previewRatio
+            DocConstraints.tPrice*DocConstraints.previewRatio,
+            DocConstraints.tHeaderHeight*DocConstraints.previewRatio
         );
         headerPrice.setPreferredSize(headerSize);
         headerPrice.setBorder(border);
@@ -386,8 +388,8 @@ public class InvoiceTableUI extends JPanel {
         headerTotal = new JLabel(LanguageFile.lTotal[lang], SwingConstants.CENTER);
         headerTotal.setFont(StyleSheet.documentFont);
         headerSize = new Dimension(
-            DocumentConstraints.tTotal*DocumentConstraints.previewRatio,
-            DocumentConstraints.tHeaderHeight*DocumentConstraints.previewRatio
+            DocConstraints.tTotal*DocConstraints.previewRatio,
+            DocConstraints.tHeaderHeight*DocConstraints.previewRatio
         );
         headerTotal.setPreferredSize(headerSize);
         headerTotal.setBorder(border);
@@ -412,8 +414,8 @@ public class InvoiceTableUI extends JPanel {
 
         JLabel vatSelectorLabel = new JLabel("BTW-tarief:", SwingConstants.RIGHT);
         Dimension labelPadding = new Dimension(
-            DocumentConstraints.tSubtotalWidth*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            DocConstraints.tSubtotalWidth*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
         vatSelectorLabel.setFont(StyleSheet.wizardFont);
         vatSelectorLabel.setPreferredSize(labelPadding);
@@ -432,8 +434,8 @@ public class InvoiceTableUI extends JPanel {
         subtotalHeader = new JLabel(LanguageFile.sTotal[lang], SwingConstants.LEFT);
         subtotalHeader.setFont(StyleSheet.documentFont);
         headerSize = new Dimension(
-            DocumentConstraints.tSubtotalLeft*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            DocConstraints.tSubtotalLeft*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
         subtotalHeader.setPreferredSize(headerSize);
         border = BorderFactory.createMatteBorder(1, 1, 1, 1, Color.black);
@@ -443,8 +445,8 @@ public class InvoiceTableUI extends JPanel {
         subtotalLabel = new JLabel("0,00 € ", SwingConstants.RIGHT);
         subtotalLabel.setFont(StyleSheet.documentFont);
         headerSize = new Dimension(
-            DocumentConstraints.tSubtotalRight*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            DocConstraints.tSubtotalRight*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
         subtotalLabel.setPreferredSize(headerSize);
         border = BorderFactory.createMatteBorder(1, 0, 1, 1, Color.black);
@@ -460,8 +462,8 @@ public class InvoiceTableUI extends JPanel {
         vatHeader = new JLabel(LanguageFile.vat21[lang], SwingConstants.LEFT);
         vatHeader.setFont(StyleSheet.documentFont);
         headerSize = new Dimension(
-            DocumentConstraints.tSubtotalLeft*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            DocConstraints.tSubtotalLeft*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
         vatHeader.setPreferredSize(headerSize);
         border = BorderFactory.createMatteBorder(0, 1, 1, 1, Color.black);
@@ -471,8 +473,8 @@ public class InvoiceTableUI extends JPanel {
         vatLabel = new JLabel("0,00 € ", SwingConstants.RIGHT);
         vatLabel.setFont(StyleSheet.documentFont);
         headerSize = new Dimension(
-            DocumentConstraints.tSubtotalRight*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            DocConstraints.tSubtotalRight*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
         vatLabel.setPreferredSize(headerSize);
         border = BorderFactory.createMatteBorder(0, 0, 1, 1, Color.black);
@@ -487,8 +489,8 @@ public class InvoiceTableUI extends JPanel {
         reverseChargeContainer.setVisible(false);
 
         Dimension topPadding = new Dimension(
-            DocumentConstraints.tSubtotalWidth*DocumentConstraints.previewRatio,
-            DocumentConstraints.quarterLine*DocumentConstraints.previewRatio
+            DocConstraints.tSubtotalWidth*DocConstraints.previewRatio,
+            DocConstraints.quarterLine*DocConstraints.previewRatio
         );
         JLabel padLabel = new JLabel();
         padLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
@@ -518,8 +520,8 @@ public class InvoiceTableUI extends JPanel {
         finalTotalHeader = new JLabel(LanguageFile.fTotal[lang], SwingConstants.LEFT);
         finalTotalHeader.setFont(StyleSheet.documentFont);
         headerSize = new Dimension(
-            DocumentConstraints.tSubtotalLeft*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            DocConstraints.tSubtotalLeft*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
         finalTotalHeader.setPreferredSize(headerSize);
         border = BorderFactory.createMatteBorder(1, 1, 1, 1, Color.black);
@@ -529,8 +531,8 @@ public class InvoiceTableUI extends JPanel {
         finalTotalLabel = new JLabel("0,00 € ", SwingConstants.RIGHT);
         finalTotalLabel.setFont(StyleSheet.documentFont);
         headerSize = new Dimension(
-            DocumentConstraints.tSubtotalRight*DocumentConstraints.previewRatio,
-            DocumentConstraints.softLine*DocumentConstraints.previewRatio
+            DocConstraints.tSubtotalRight*DocConstraints.previewRatio,
+            DocConstraints.softLine*DocConstraints.previewRatio
         );
         finalTotalLabel.setPreferredSize(headerSize);
         border = BorderFactory.createMatteBorder(1, 0, 1, 1, Color.black);

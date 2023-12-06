@@ -1,4 +1,4 @@
-package be.planetegem.mammon.invoice;
+package be.planetegem.mammon.ivf;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,6 +10,10 @@ import javax.swing.JOptionPane;
 public class CustomerManager extends CustomerManagerUI implements ActionListener {
 
     public void setCustomer(String customerId){
+        selectCustomer.removeActionListener(this);
+        selectCustomer.setSelectedItem(null);
+        selectCustomer.addActionListener(this);
+
         for (int index = 0; index < customers.size(); index++){
             if (customers.get(index).get("CUSTOMERID").equals(customerId)){
                 selectCustomer.setSelectedIndex(index);
@@ -17,7 +21,6 @@ public class CustomerManager extends CustomerManagerUI implements ActionListener
             }
         }
     }
-
     public void resetCustomer(){
         db.logEvent("Resetting customer manager");
         this.currentCustomer = new HashMap<String, String>();

@@ -1,4 +1,4 @@
-package be.planetegem.mammon.invoice;
+package be.planetegem.mammon.ivf;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +16,7 @@ import be.planetegem.mammon.PdfPenman;
 import be.planetegem.mammon.db.DbCommands;
 import be.planetegem.mammon.db.DbConsole;
 import be.planetegem.mammon.statics.LanguageFile;
+import be.planetegem.mammon.util.FormattedInvoice;
 
 public class InvoiceFactory extends InvoiceFactoryUI implements ActionListener {
 
@@ -265,6 +266,15 @@ public class InvoiceFactory extends InvoiceFactoryUI implements ActionListener {
                 PdfPenman pdfPenman = parent.getPdfPenman();
                 int result = pdfPenman.setPdfPath(ivNumber);
                 if (result == JFileChooser.APPROVE_OPTION){
+                    FormattedInvoice forInv = new FormattedInvoice(this.lang);
+                    boolean trueLogo = true;
+                    
+                    String logo = currentProfile.get("LOGOPATH");
+                    if (logo.equals("")){
+                        logo = currentProfile.get("COMPANYNAME");
+                        trueLogo = false;
+                    }
+
                     pdfPenman.startPdf();
 
                     boolean trueLogo = true;

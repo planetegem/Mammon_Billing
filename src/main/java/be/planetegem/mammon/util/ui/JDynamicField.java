@@ -1,9 +1,11 @@
-package be.planetegem.mammon.util;
+package be.planetegem.mammon.util.ui;
 
 import java.awt.Component;
 
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
+
+import be.planetegem.mammon.util.ChangeListener;
 
 public class JDynamicField extends JTextField{
     public JDynamicField(Component parent, String text){

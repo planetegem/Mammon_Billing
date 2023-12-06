@@ -16,8 +16,8 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
 import be.planetegem.mammon.statics.StyleSheet;
-import be.planetegem.mammon.util.JWizardHeader;
-import be.planetegem.mammon.util.JWizardLabel;
+import be.planetegem.mammon.util.ui.JWizardHeader;
+import be.planetegem.mammon.util.ui.JWizardLabel;
 
 public class CustomerWizardUI extends JInternalFrame {
 

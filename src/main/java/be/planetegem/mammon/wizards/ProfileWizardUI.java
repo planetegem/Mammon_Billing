@@ -1,8 +1,8 @@
 package be.planetegem.mammon.wizards;
 
 import be.planetegem.mammon.statics.StyleSheet;
-import be.planetegem.mammon.util.JWizardHeader;
-import be.planetegem.mammon.util.JWizardLabel;
+import be.planetegem.mammon.util.ui.JWizardHeader;
+import be.planetegem.mammon.util.ui.JWizardLabel;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;

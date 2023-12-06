@@ -8,14 +8,14 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-public class JResizedImage {
+public class ResizedImage {
 
     public BufferedImage source;
     public int width;
     public int height;
     public Image resized;
 
-    public JResizedImage(String imagePath, int targetWidth, int targetHeight) throws IOException {
+    public ResizedImage(String imagePath, int targetWidth, int targetHeight) throws IOException {
         this.source = ImageIO.read(new File(imagePath));
 
         // Resize image

@@ -1,4 +1,4 @@
-package be.planetegem.mammon.util;
+package be.planetegem.mammon.util.ui;
 
 import java.awt.event.MouseListener;
 import java.io.IOException;

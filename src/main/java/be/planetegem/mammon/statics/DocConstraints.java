@@ -2,17 +2,8 @@ package be.planetegem.mammon.statics;
 
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 
-public class DocumentConstraints {
-    // Summary:
-    // Top margin 8
-    // Profile Section 52 (4 top-margin + 32 logo + 4 margin + 8 details + 4 bottom-margin)
-    // BillHeader 8
-    // Margin 8
-    // Customer Section 40
-    // Invoice Number 16
-    // Invoice payment: 16 + 11;
-
-
+public class DocConstraints {
+    
     // Main measurements
     static final public int a4Width = 210;
     static final public int a4Height = 297;

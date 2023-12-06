@@ -9,9 +9,9 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import be.planetegem.mammon.statics.StyleSheet;
-import be.planetegem.mammon.util.JAnchor;
-import be.planetegem.mammon.util.JFontLabel;
-import be.planetegem.mammon.util.JResizedImage;
+import be.planetegem.mammon.util.ResizedImage;
+import be.planetegem.mammon.util.ui.JAnchor;
+import be.planetegem.mammon.util.ui.JFontLabel;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -51,7 +51,7 @@ public class IntroSplash extends JInternalFrame implements ActionListener {
         logoContainer.setPreferredSize(logoSize);
         getContentPane().add(logoContainer);
         try {
-            JResizedImage image = new JResizedImage("assets/jpvr.png", logoSize.width, logoSize.height);
+            ResizedImage image = new ResizedImage("https://planetegem.be/demo/mammon_billing/assets/jpvr.png", logoSize.width, logoSize.height);
             JLabel jpLogo = new JLabel(new ImageIcon(image.resized));
             logoContainer.add(jpLogo);
         } catch (IOException e){};

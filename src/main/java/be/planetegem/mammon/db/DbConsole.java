@@ -63,6 +63,5 @@ public class DbConsole extends DbCommands {
         checkInvoicesTable();
         checkInvoiceLinesTable();
 
-        showConsole();
     }
 }

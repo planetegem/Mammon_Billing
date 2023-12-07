@@ -141,6 +141,7 @@ public class Mammon extends JFrame implements ActionListener
         scrollPane.setPreferredSize(new Dimension(30, 500));
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         mainContent.add(BorderLayout.CENTER, scrollPane);
+        setIntroSplash();
 
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

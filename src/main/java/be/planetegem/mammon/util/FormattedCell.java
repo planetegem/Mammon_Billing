@@ -11,6 +11,7 @@ public class FormattedCell {
     public int height;
     public String string;
     public float value;
+    public boolean mergedCell = false;
 
     public int lineCount(double width){
         int lines = 1;

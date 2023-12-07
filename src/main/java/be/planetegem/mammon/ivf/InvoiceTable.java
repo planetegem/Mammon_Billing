@@ -25,16 +25,16 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
     }
 
     // getter for formatted table (used when generating pdf)
-    public FormattedInvoice getFormattedTable(){
-        FormattedInvoice result = new FormattedInvoice(this.lang);
+    public void getFormattedTable(FormattedInvoice formalInvoice){
 
-        result.setDescriptionColumn(this.descriptionColumn);
-        result.setDateColumn(this.dateColumn);
-        result.setAmountColumn(this.amountColumn);
-        result.setPriceColumn(this.priceColumn);
-        result.setTotalsColumn(this.totalColumn);
+        formalInvoice.setDescriptionColumn(this.descriptionColumn);
+        formalInvoice.setDateColumn(this.dateColumn);
+        formalInvoice.setAmountColumn(this.amountColumn);
+        formalInvoice.setPriceColumn(this.priceColumn);
+        formalInvoice.setTotalsColumn(this.totalColumn);
 
-        result.setLineCount(this.tableLines);
+        formalInvoice.setLineCount(this.tableLines);
+        formalInvoice.setTableHeaders();
 
         ArrayList<String> subtotals = new ArrayList<String>();
         subtotals.add(LanguageFile.sTotal[lang]);
@@ -45,16 +45,13 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
             subtotals.add(LanguageFile.vat21[lang]);
         } else if (selectedVat.equals("0%")){
             subtotals.add(LanguageFile.vat0[lang]);
-            result.setReverseVat();
         } else if (selectedVat.equals("6%")){
             subtotals.add(LanguageFile.vat6[lang]);
         }
         subtotals.add(String.format("%.2f", subtotalWithVat).replace(".", ",") + " € ");
         subtotals.add(LanguageFile.fTotal[lang]);
         subtotals.add(String.format("%.2f", finalTotal).replace(".", ",") + " € ");
-        result.setSubtotals(subtotals);
-
-        return result;
+        formalInvoice.setSubtotals(subtotals);
     }
 
     // setter for table and vat (used when loading invoice from db)
@@ -186,7 +183,7 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
                     content = tableArray.get(i).get("date");
                     dateColumn.add(new FormattedCell(i + lineOffset, 1 + heightOffset, content));
                 }
-
+                
                 // Amount is always specified, except when NA
                 if (tableArray.get(i).get("amount").equals("/")){
                     if (tableArray.get(i - 1).get("amount").equals("/")){
@@ -200,6 +197,9 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
                         content += " " + tableArray.get(i).get("unit");
                     }
                     amountColumn.add(new FormattedCell(i + lineOffset, 1 + heightOffset, content));
+                }
+                if (heightOffset > 0){
+                    amountColumn.get(amountColumn.size() - 1).mergedCell = true;
                 }
 
                 if (tableArray.get(i).get("price").equals(tableArray.get(i - 1).get("price"))){
@@ -221,6 +221,9 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
             String cleanPrice = tableArray.get(i).get("price").replace(",", ".");
             float priceFloat = Float.parseFloat(cleanPrice);
             totalColumn.add(new FormattedCell(i + lineOffset, 1 + heightOffset, amountFloat*priceFloat));
+            if (heightOffset > 0){
+                totalColumn.get(totalColumn.size() - 1).mergedCell = true;
+            }
 
             lineOffset += heightOffset;
         }

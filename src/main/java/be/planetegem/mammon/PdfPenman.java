@@ -21,9 +21,10 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 import be.planetegem.mammon.db.DbConsole;
 import be.planetegem.mammon.statics.DocConstraints;
+import be.planetegem.mammon.statics.LanguageFile;
 import be.planetegem.mammon.statics.StyleSheet;
 import be.planetegem.mammon.util.FormattedCell;
-import be.planetegem.mammon.util.FormattedTable;
+import be.planetegem.mammon.util.FormattedInvoice;
 import be.planetegem.mammon.util.ResizedImage;
 
 public class PdfPenman {
@@ -39,7 +40,7 @@ public class PdfPenman {
     public static final int RIGHT = 2;
 
 
-    // step 1: select path for pdf
+    // select path for pdf
     public int setPdfPath(String invoiceNumber){
         JFileChooser fc = new JFileChooser();
         fc.setDialogTitle("Opslaan als pdf");
@@ -77,8 +78,9 @@ public class PdfPenman {
         return selection;
     }
 
-    // Step 2: start PDDocument & content stream
-    public void startPdf(){
+    // Main method: generates pdf from a formattedinvoice object 
+    public void makePdf(FormattedInvoice invoice){
+        // step 1: start PDDocument & content stream
         file = new PDDocument();
         PDPage page = new PDPage(PDRectangle.A4);
         
@@ -89,38 +91,40 @@ public class PdfPenman {
         } catch (IOException e){
              db.logEvent("Exception while starting content stream: " + e.getMessage());
         }
-    }
-    // Step 3: add profile
-    public void setProfile(String logo, String details, boolean trueLogo){
-        float imgWidth, imgHeight;
+
+        // positioning values: keeps track of pointer, starting in top left corner
         float xPos = 0;
         float yPos = DocConstraints.a4Height*DocConstraints.pdfRatio;
+
+        // Step 2: profile section
+        float imgWidth, imgHeight;
         boolean logoFailed = false;
 
         // Add logo
-        if (trueLogo){
+        if (invoice.hasLogo){
             try {
                 // Calculate size of image
                 Dimension imgDimension = ResizedImage.fitImage(
-                    ImageIO.read(new File(logo)), 
+                    ImageIO.read(new File(invoice.logoValue)), 
                     DocConstraints.logoWidth, 
-                    DocConstraints.logoHeight);
+                    DocConstraints.logoHeight
+                );
 
                 imgWidth = (float) imgDimension.getWidth()*DocConstraints.pdfRatio;
                 imgHeight = (float) imgDimension.getHeight()*DocConstraints.pdfRatio;
                 xPos = (DocConstraints.a4Width*DocConstraints.pdfRatio - imgWidth)*0.5f;
                 yPos = (DocConstraints.a4Height - DocConstraints.baseMargin)*DocConstraints.pdfRatio - imgHeight;
 
-                PDImageXObject img = PDImageXObject.createFromFile(logo, file);
+                PDImageXObject img = PDImageXObject.createFromFile(invoice.logoValue, file);
                 ctx.drawImage(img, xPos, yPos, imgWidth, imgHeight);
-                db.logEvent("Logo printed to pdf from path " + logo);
+                db.logEvent("Logo printed to pdf from path " + invoice.logoValue);
             } catch (IOException e){
                 db.logEvent("Exception printing profile logo to pdf: " + e.getMessage());
                 logoFailed = true;
             }
         } 
         // Add ad hoc logo if necessary
-        if (!trueLogo || logoFailed) {
+        if (!invoice.hasLogo || logoFailed) {
             db.logEvent("Generating ad hoc logo");
             try {
                 PDFont font = PDType1Font.HELVETICA_BOLD;
@@ -129,38 +133,39 @@ public class PdfPenman {
                 ctx.setFont(font, fontSize);
 
                 // figure out size to determine offsets
-                imgWidth = font.getStringWidth(logo.toUpperCase()) / 1000 * fontSize;
+                imgWidth = font.getStringWidth(invoice.logoValue.toUpperCase()) / 1000 * fontSize;
                 imgHeight = (font.getFontDescriptor().getFontBoundingBox().getHeight() / 1600 * fontSize);
                 xPos = ((DocConstraints.a4Width*DocConstraints.pdfRatio - imgWidth)*0.5f);
                 yPos = (DocConstraints.a4Height - DocConstraints.baseMargin)*DocConstraints.pdfRatio - imgHeight;
 
                 ctx.newLineAtOffset(xPos, yPos);               
-                ctx.showText(logo.toUpperCase());
+                ctx.showText(invoice.logoValue.toUpperCase());
                 ctx.endText();
             } catch (IOException e){
                 db.logEvent("Exception generating ad hoc logo: " + e.getMessage());
             }
         }
+
         // Add profile string
         try {
-            db.logEvent("Printing profile string: " + details);
-
             PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
-            int fontSize = 11;
+            int fontSize = 11; 
+            db.logEvent("Printing profile string: " + invoice.profileString);           
             String nextLine = "";
 
             // determine size and location
-            imgWidth = font.getStringWidth(details) / 1000 * fontSize;
+            float strWidth = font.getStringWidth(invoice.profileString) / 1000 * fontSize;
+            String details = invoice.profileString;
 
             // if too wide, split of last portion
-            if (imgWidth > DocConstraints.lineWidth*DocConstraints.pdfRatio){
+            if (strWidth > DocConstraints.lineWidth*DocConstraints.pdfRatio){
                 String[] temp = details.split("\u2981");
                 nextLine = temp[temp.length - 1];
                 details = details.replace(nextLine, "");                
                 imgWidth = font.getStringWidth(details) / 1000 * fontSize;
                 db.logEvent("String too wide; splitting off " + nextLine);
             }            
-            xPos = (DocConstraints.a4Width*DocConstraints.pdfRatio - imgWidth)*0.5f;
+            xPos = (DocConstraints.a4Width*DocConstraints.pdfRatio - strWidth)*0.5f;
             imgHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize*0.8f;
             yPos -= imgHeight + DocConstraints.quarterLine*DocConstraints.pdfRatio;
 
@@ -182,48 +187,46 @@ public class PdfPenman {
         } catch (IOException e){
             db.logEvent("Exception printing profile details: " + e.getMessage());
         }
-    }
-    // Step 4: add invoice header
-    public void setInvoiceHeader(String ivHeader){
-        db.logEvent("Printing invoice header: " + ivHeader);
+
+        // Step 3: invoice header
+        db.logEvent("Printing invoice header: " + invoice.ivHeader);
 
         try {
             PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
             int fontSize = 11;
 
-            float xPos = DocConstraints.baseMargin*DocConstraints.pdfRatio;
-            float yPos = (DocConstraints.a4Height - DocConstraints.ivHeaderY)*DocConstraints.pdfRatio;
+            xPos = DocConstraints.baseMargin*DocConstraints.pdfRatio;
+            yPos = (DocConstraints.a4Height - DocConstraints.ivHeaderY)*DocConstraints.pdfRatio;
 
             ctx.beginText();
             ctx.setFont(font, fontSize);           
             ctx.newLineAtOffset(xPos, yPos);
-            ctx.showText(ivHeader);
+            ctx.showText(invoice.ivHeader);
             ctx.endText();
 
         } catch (IOException e){
             db.logEvent("Exception printing invoice header to pdf: " + e.getMessage());
         }
-    }
-    // Step 5: add customer
-    public void setCustomer(String header, ArrayList<String> customerLines){
-        db.logEvent("Printing customer: " + customerLines.get(0));
+
+        // Step 4: customer section
+        db.logEvent("Printing customer: " + invoice.customerLines.get(0));
 
         try {
             PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
             int fontSize = 11;
 
-            float xPos = (DocConstraints.baseMargin + DocConstraints.customerLeadingWidth)*DocConstraints.pdfRatio;
-            float yPos = (DocConstraints.a4Height - DocConstraints.customerY)*DocConstraints.pdfRatio;
+            xPos = (DocConstraints.baseMargin + DocConstraints.customerLeadingWidth)*DocConstraints.pdfRatio;
+            yPos = (DocConstraints.a4Height - DocConstraints.customerY)*DocConstraints.pdfRatio;
             float lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize * 0.6f;
 
             ctx.beginText();
             ctx.setFont(font, fontSize);           
             ctx.newLineAtOffset(xPos, yPos);
-            ctx.showText(header);
+            ctx.showText(invoice.customerHeader);
             ctx.endText();
 
             xPos += DocConstraints.customerHeaderWidth*DocConstraints.pdfRatio;
-            for (String line: customerLines){
+            for (String line: invoice.customerLines){
                 db.logEvent("Printing line to pdf: " + line);
                 ctx.beginText();
                 ctx.newLineAtOffset(xPos, yPos);
@@ -234,137 +237,188 @@ public class PdfPenman {
         } catch (IOException e){
             db.logEvent("Exception printing customer to pdf: " + e.getMessage());
         }
-    }
-    // step 6: invoice number
-    public void setInvoiceNumber(String invoiceNumber){
-        db.logEvent("Printing Invoice number: " + invoiceNumber);
+
+        // Step 5: invoice number
+        db.logEvent("Printing Invoice number: " + invoice.ivNumber);
 
         try {
             PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
             int fontSize = 11;
 
-            float xPos = (DocConstraints.baseMargin + DocConstraints.customerLeadingWidth)*DocConstraints.pdfRatio;
-            float yPos = (DocConstraints.a4Height - DocConstraints.invoiceNumberY)*DocConstraints.pdfRatio;
+            xPos = (DocConstraints.baseMargin + DocConstraints.customerLeadingWidth)*DocConstraints.pdfRatio;
+            yPos = (DocConstraints.a4Height - DocConstraints.invoiceNumberY)*DocConstraints.pdfRatio;
 
             ctx.beginText();
             ctx.setFont(font, fontSize);           
             ctx.newLineAtOffset(xPos, yPos);
-            ctx.showText(invoiceNumber);
+            ctx.showText(invoice.ivNumber);
             ctx.endText();
 
         } catch (IOException e){
             db.logEvent("Exception printing invoice number to pdf: " + e.getMessage());
         }
-    }
-
-    // step 7: invoice table
-    public void setTable(FormattedTable table){
+        
+        int pageCount = 1;
+        // step 6: invoice table
         db.logEvent("Printing table");
-        table.splitTable();
+        if (invoice.multiDescriptionColumn.get(1).size() > 0){
+            invoice.applyMergedCellPatch();
+        }
 
         try {
-            float xPos = DocConstraints.tDescriptionX*DocConstraints.pdfRatio;
-            float yPos = (DocConstraints.a4Height - DocConstraints.tHeaderY)*DocConstraints.pdfRatio;
+            xPos = DocConstraints.tDescriptionX*DocConstraints.pdfRatio;
+            yPos = (DocConstraints.a4Height - DocConstraints.tHeaderY)*DocConstraints.pdfRatio;
             float cellWidth = DocConstraints.tDescription*DocConstraints.pdfRatio;
             float cellHeight = DocConstraints.tHeaderHeight*DocConstraints.pdfRatio;
 
-            drawCell(table.headers.get(0), xPos, yPos, cellWidth, cellHeight, CENTER, false);
+            drawCell(invoice.headers.get(0), xPos, yPos, cellWidth, cellHeight, CENTER, false);
             cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
-            if (table.multiPage){
-                for (FormattedCell cell : table.multiDescriptionColumn.get(0)){
-                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, true);
-                }
-            } else {
-                for (FormattedCell cell : table.descriptionColumn){
-                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, true);
-                }
+            for (FormattedCell cell : invoice.multiDescriptionColumn.get(0)){
+                drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, true);
             }
 
             xPos = DocConstraints.tDateX*DocConstraints.pdfRatio;
             cellWidth = DocConstraints.tDate*DocConstraints.pdfRatio;
             cellHeight = DocConstraints.tHeaderHeight*DocConstraints.pdfRatio;
-            drawCell(table.headers.get(1), xPos, yPos, cellWidth, cellHeight, CENTER, false);
+            drawCell(invoice.headers.get(1), xPos, yPos, cellWidth, cellHeight, CENTER, false);
             cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
-            if (table.multiPage){
-                for (FormattedCell cell : table.multiDateColumn.get(0)){
-                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
-                }
-            } else {
-                for (FormattedCell cell : table.dateColumn){
-                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
-                }
+            for (FormattedCell cell : invoice.multiDateColumn.get(0)){
+                drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
             }
 
             xPos = DocConstraints.tAmountX*DocConstraints.pdfRatio;
             cellWidth = DocConstraints.tNumber*DocConstraints.pdfRatio;
             cellHeight = DocConstraints.tHeaderHeight*DocConstraints.pdfRatio;
-            drawCell(table.headers.get(2), xPos, yPos, cellWidth, cellHeight, CENTER, false);
+            drawCell(invoice.headers.get(2), xPos, yPos, cellWidth, cellHeight, CENTER, false);
             cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
-            if (table.multiPage){
-                for (FormattedCell cell : table.multiAmountColumn.get(0)){
-                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
-                }
-            } else {
-                for (FormattedCell cell : table.amountColumn){
-                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
-                }
+            for (FormattedCell cell : invoice.multiAmountColumn.get(0)){
+                drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
             }
 
             xPos = DocConstraints.tPriceX*DocConstraints.pdfRatio;
             cellWidth = DocConstraints.tPrice*DocConstraints.pdfRatio;
             cellHeight = DocConstraints.tHeaderHeight*DocConstraints.pdfRatio;
-            drawCell(table.headers.get(3), xPos, yPos, cellWidth, cellHeight, CENTER, false);
+            drawCell(invoice.headers.get(3), xPos, yPos, cellWidth, cellHeight, CENTER, false);
             cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
-            if (table.multiPage){
-                for (FormattedCell cell : table.multiPriceColumn.get(0)){
-                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
-                }
-            } else {
-                for (FormattedCell cell : table.priceColumn){
-                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
-                }
+            for (FormattedCell cell : invoice.multiPriceColumn.get(0)){
+                drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
             }
 
             xPos = DocConstraints.tTotalX*DocConstraints.pdfRatio;
             cellWidth = DocConstraints.tTotal*DocConstraints.pdfRatio;
             cellHeight = DocConstraints.tHeaderHeight*DocConstraints.pdfRatio;
-            drawCell(table.headers.get(4), xPos, yPos, cellWidth, cellHeight, CENTER, false);
+            drawCell(invoice.headers.get(4), xPos, yPos, cellWidth, cellHeight, CENTER, false);
             cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
-            if (table.multiPage){
-                for (FormattedCell cell : table.multiTotalsColumn.get(0)){
-                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, RIGHT, false);
-                }
-            } else {
-                for (FormattedCell cell : table.totalsColumn){
-                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, RIGHT, false);
-                }
+            for (FormattedCell cell : invoice.multiTotalsColumn.get(0)){
+                drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, RIGHT, false);
             }
+
+            yPos -= invoice.getTableSize(invoice.multiDescriptionColumn.get(0))*cellHeight;
+            yPos -= DocConstraints.halfLine*DocConstraints.pdfRatio;
+
+            // check if there is a 2nd page
+            if (invoice.multiDescriptionColumn.get(1).size() > 0){
+                PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
+                int fontSize = 11;
+                String pageFooter = LanguageFile.page[invoice.lang] + "1/2";
+
+                float lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.6f ;
+                yPos = DocConstraints.baseMargin*DocConstraints.pdfRatio + lineHeight;
+
+                float lineWidth = font.getStringWidth(pageFooter) / 1000 * fontSize;
+                xPos = (DocConstraints.a4Width*DocConstraints.pdfRatio - lineWidth)*0.5f;
+
+                ctx.beginText();
+                ctx.newLineAtOffset(xPos, yPos);
+                ctx.showText(pageFooter);
+                ctx.endText();
+
+                // add new page
+                PDPage newPage = new PDPage(PDRectangle.A4);
+                file.addPage(newPage);
+                ctx.close();
+                ctx = new PDPageContentStream(file, newPage);
+                db.logEvent("Started 2nd page");
+                pageCount++;
+
+                xPos = DocConstraints.tDescriptionX*DocConstraints.pdfRatio;
+                yPos = (DocConstraints.a4Height - DocConstraints.baseMargin*2)*DocConstraints.pdfRatio;
+                cellWidth = DocConstraints.tDescription*DocConstraints.pdfRatio;
+                cellHeight = DocConstraints.tHeaderHeight*DocConstraints.pdfRatio;
+                yPos -= cellHeight;
+
+                drawCell(invoice.headers.get(0), xPos, yPos, cellWidth, cellHeight, CENTER, false);
+                cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
+                for (FormattedCell cell : invoice.multiDescriptionColumn.get(1)){
+                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, true);
+                }
+
+                xPos = DocConstraints.tDateX*DocConstraints.pdfRatio;
+                cellWidth = DocConstraints.tDate*DocConstraints.pdfRatio;
+                cellHeight = DocConstraints.tHeaderHeight*DocConstraints.pdfRatio;
+                drawCell(invoice.headers.get(1), xPos, yPos, cellWidth, cellHeight, CENTER, false);
+                cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
+                for (FormattedCell cell : invoice.multiDateColumn.get(1)){
+                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
+                }
+
+                xPos = DocConstraints.tAmountX*DocConstraints.pdfRatio;
+                cellWidth = DocConstraints.tNumber*DocConstraints.pdfRatio;
+                cellHeight = DocConstraints.tHeaderHeight*DocConstraints.pdfRatio;
+                drawCell(invoice.headers.get(2), xPos, yPos, cellWidth, cellHeight, CENTER, false);
+                cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
+                for (FormattedCell cell : invoice.multiAmountColumn.get(1)){
+                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
+                }
+
+                xPos = DocConstraints.tPriceX*DocConstraints.pdfRatio;
+                cellWidth = DocConstraints.tPrice*DocConstraints.pdfRatio;
+                cellHeight = DocConstraints.tHeaderHeight*DocConstraints.pdfRatio;
+                drawCell(invoice.headers.get(3), xPos, yPos, cellWidth, cellHeight, CENTER, false);
+                cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
+                for (FormattedCell cell : invoice.multiPriceColumn.get(1)){
+                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, CENTER, false);
+                }
+
+                xPos = DocConstraints.tTotalX*DocConstraints.pdfRatio;
+                cellWidth = DocConstraints.tTotal*DocConstraints.pdfRatio;
+                cellHeight = DocConstraints.tHeaderHeight*DocConstraints.pdfRatio;
+                drawCell(invoice.headers.get(4), xPos, yPos, cellWidth, cellHeight, CENTER, false);
+                cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
+                for (FormattedCell cell : invoice.multiTotalsColumn.get(1)){
+                    drawCell(cell.string, xPos, yPos - (cell.y + cell.height)*cellHeight, cellWidth, cellHeight*cell.height, RIGHT, false);
+                }
+
+                yPos -= invoice.getTableSize(invoice.multiDescriptionColumn.get(1))*cellHeight;
+                yPos -= DocConstraints.halfLine*DocConstraints.pdfRatio;
+            }
+
+
 
             // subtotals
             cellHeight = DocConstraints.softLine*DocConstraints.pdfRatio;
-            yPos -= (table.getTableSize()*cellHeight + DocConstraints.halfLine*DocConstraints.pdfRatio);
             yPos -= DocConstraints.softLine*DocConstraints.pdfRatio;
             xPos = DocConstraints.subtotalLeftX*DocConstraints.pdfRatio;
             cellWidth = DocConstraints.tSubtotalLeft*DocConstraints.pdfRatio;
-            drawCell(table.subtotals.get(0), xPos, yPos, cellWidth, cellHeight, LEFT, false);
+            drawCell(invoice.subtotals.get(0), xPos, yPos, cellWidth, cellHeight, LEFT, false);
 
             xPos = DocConstraints.subtotalRightX*DocConstraints.pdfRatio;
             cellWidth = DocConstraints.tSubtotalRight*DocConstraints.pdfRatio;
-            drawCell(table.subtotals.get(1), xPos, yPos, cellWidth, cellHeight, RIGHT, false);
+            drawCell(invoice.subtotals.get(1), xPos, yPos, cellWidth, cellHeight, RIGHT, false);
 
             yPos -= DocConstraints.softLine*DocConstraints.pdfRatio;
             xPos = DocConstraints.subtotalLeftX*DocConstraints.pdfRatio;
             cellWidth = DocConstraints.tSubtotalLeft*DocConstraints.pdfRatio;
-            drawCell(table.subtotals.get(2), xPos, yPos, cellWidth, cellHeight, LEFT, false);
+            drawCell(invoice.subtotals.get(2), xPos, yPos, cellWidth, cellHeight, LEFT, false);
 
             xPos = DocConstraints.subtotalRightX*DocConstraints.pdfRatio;
             cellWidth = DocConstraints.tSubtotalRight*DocConstraints.pdfRatio;
-            drawCell(table.subtotals.get(3), xPos, yPos, cellWidth, cellHeight, RIGHT, false);
+            drawCell(invoice.subtotals.get(3), xPos, yPos, cellWidth, cellHeight, RIGHT, false);
 
-            if (table.reverseVat){
-                PDType0Font font = PDType0Font.load(file, new File("assets/FreeSerif.ttf"));
-                int fontSize = 12;
-                String str = table.reverseVatString.get(0);
+            if (invoice.reverseVat){
+                PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
+                int fontSize = 11;
+                String str = invoice.reverseVatString.get(0);
                 float strHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.5f ;
                 float strWidth = font.getStringWidth(str) / 1000 * fontSize;
                 yPos -= DocConstraints.softLine*DocConstraints.pdfRatio;
@@ -376,7 +430,7 @@ public class PdfPenman {
 
                 fontSize = 8;
                 ctx.setFont(font, fontSize);
-                str = table.reverseVatString.get(1);
+                str = invoice.reverseVatString.get(1);
                 strWidth = font.getStringWidth(str) / 1000 * fontSize;
                 yPos -= strHeight;
                 xPos = (DocConstraints.a4Width - DocConstraints.baseMargin)*DocConstraints.pdfRatio - strWidth;
@@ -385,7 +439,7 @@ public class PdfPenman {
                 ctx.showText(str);
                 ctx.endText();
 
-                str = table.reverseVatString.get(2);
+                str = invoice.reverseVatString.get(2);
                 strWidth = font.getStringWidth(str) / 1000 * fontSize;
                 yPos -= strHeight;
                 xPos = (DocConstraints.a4Width - DocConstraints.baseMargin)*DocConstraints.pdfRatio - strWidth;
@@ -402,19 +456,17 @@ public class PdfPenman {
             yPos -= DocConstraints.softLine*DocConstraints.pdfRatio;
             xPos = DocConstraints.subtotalLeftX*DocConstraints.pdfRatio;
             cellWidth = DocConstraints.tSubtotalLeft*DocConstraints.pdfRatio;
-            drawCell(table.subtotals.get(4), xPos, yPos, cellWidth, cellHeight, LEFT, false);
+            drawCell(invoice.subtotals.get(4), xPos, yPos, cellWidth, cellHeight, LEFT, false);
 
             xPos = DocConstraints.subtotalRightX*DocConstraints.pdfRatio;
             cellWidth = DocConstraints.tSubtotalRight*DocConstraints.pdfRatio;
-            drawCell(table.subtotals.get(5), xPos, yPos, cellWidth, cellHeight, RIGHT, false);
+            drawCell(invoice.subtotals.get(5), xPos, yPos, cellWidth, cellHeight, RIGHT, false);
 
         } catch (IOException e){
             db.logEvent("Exception printing table to pdf: " + e.getMessage());
-        }      
-    }
+        }
 
-    // Add footer
-    public void setFooter(ArrayList<String> footer){
+        // Step 7: footer 
         db.logEvent("Printing footer");
 
         try {
@@ -422,31 +474,48 @@ public class PdfPenman {
             int fontSize = 11;
 
             float lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.6f ;
-            float yPos = DocConstraints.baseMargin*DocConstraints.pdfRatio + lineHeight;
+            if (pageCount == 1){
+                yPos = DocConstraints.baseMargin*DocConstraints.pdfRatio + lineHeight;
+            } else {
+                yPos -= DocConstraints.baseMargin*DocConstraints.pdfRatio*2;
+            }
 
-            float lineWidth = font.getStringWidth(footer.get(0)) / 1000 * fontSize;
-            float xPos = (DocConstraints.a4Width*DocConstraints.pdfRatio - lineWidth)*0.5f;
-
-            ctx.beginText();
-            ctx.newLineAtOffset(xPos, yPos);
-            ctx.showText(footer.get(0));
-            ctx.endText();
-            yPos -= lineHeight;
-
-            lineWidth = font.getStringWidth(footer.get(1)) / 1000 * fontSize;
+            float lineWidth = font.getStringWidth(invoice.footer.get(0)) / 1000 * fontSize;
             xPos = (DocConstraints.a4Width*DocConstraints.pdfRatio - lineWidth)*0.5f;
 
             ctx.beginText();
             ctx.newLineAtOffset(xPos, yPos);
-            ctx.showText(footer.get(1));
+            ctx.showText(invoice.footer.get(0));
             ctx.endText();
+            yPos -= lineHeight;
+
+            lineWidth = font.getStringWidth(invoice.footer.get(1)) / 1000 * fontSize;
+            xPos = (DocConstraints.a4Width*DocConstraints.pdfRatio - lineWidth)*0.5f;
+
+            ctx.beginText();
+            ctx.newLineAtOffset(xPos, yPos);
+            ctx.showText(invoice.footer.get(1));
+            ctx.endText();
+
+            // page count
+            if (pageCount > 1){
+                String pageFooter = LanguageFile.page[invoice.lang] + pageCount + "/" + pageCount;
+                lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.6f ;
+                yPos = DocConstraints.baseMargin*DocConstraints.pdfRatio + lineHeight;
+                lineWidth = font.getStringWidth(pageFooter) / 1000 * fontSize;
+                xPos = (DocConstraints.a4Width*DocConstraints.pdfRatio - lineWidth)*0.5f;
+
+                ctx.beginText();
+                ctx.newLineAtOffset(xPos, yPos);
+                ctx.showText(pageFooter);
+                ctx.endText();
+            }
+
         } catch (IOException e){
             db.logEvent("Exception printing footer to pdf: " + e.getMessage());
-        } 
-    }
-
-    // Last step: saving the file
-    public void savePdf(){
+        }      
+    
+        // Last step: saving the file
         try {
             ctx.close();
             file.save(pdfPath);
@@ -466,6 +535,7 @@ public class PdfPenman {
 
         PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
         int fontSize = 11;
+        ctx.setFont(font, fontSize);
 
         float strHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.6f ;
         float strWidth = font.getStringWidth(str) / 1000 * fontSize;
@@ -517,8 +587,7 @@ public class PdfPenman {
             strY -= lineHeight;
         }
     }
-
-
+    
     public PdfPenman(Mammon parent){
         this.parent = parent;
         this.db = parent.getDb();

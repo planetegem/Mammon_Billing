@@ -266,54 +266,14 @@ public class InvoiceFactory extends InvoiceFactoryUI implements ActionListener {
                 PdfPenman pdfPenman = parent.getPdfPenman();
                 int result = pdfPenman.setPdfPath(ivNumber);
                 if (result == JFileChooser.APPROVE_OPTION){
-                    FormattedInvoice forInv = new FormattedInvoice(this.lang);
-                    boolean trueLogo = true;
+                    FormattedInvoice formalInvoice = new FormattedInvoice(this.lang);
+
+                    formalInvoice.setProfile(currentProfile);
+                    formalInvoice.setCustomer(currentCustomer);
+                    formalInvoice.setInvoiceDetails(newInvoice);
+                    ivTable.getFormattedTable(formalInvoice);
                     
-                    String logo = currentProfile.get("LOGOPATH");
-                    if (logo.equals("")){
-                        logo = currentProfile.get("COMPANYNAME");
-                        trueLogo = false;
-                    }
-
-                    pdfPenman.startPdf();
-
-                    boolean trueLogo = true;
-                    String logo = currentProfile.get("LOGOPATH");
-                    if (logo.equals("")){
-                        logo = currentProfile.get("COMPANYNAME");
-                        trueLogo = false;
-                    }
-                    pdfPenman.setProfile(logo, pm.getPdfString(), trueLogo);
-
-                    String ivHeader = typeSelector.getSelectedItem().toString();
-                    ivHeader += " " + LanguageFile.created[lang] + " ";
-                    ivHeader += placeField.getText();
-                    ivHeader += " " + LanguageFile.on[lang] + " ";
-                    ivHeader += dateField.getText();
-
-                    pdfPenman.setInvoiceHeader(ivHeader);
-                    pdfPenman.setCustomer(LanguageFile.to[lang], cm.getPdfString());
-
-                    String ivNumberString = "";
-                    if (direction == "POSITIVE"){
-                        ivNumberString += LanguageFile.invoiceNr[lang] + " " + ivNumber; 
-                    } else if (direction == "NEGATIVE"){
-                        ivNumberString += LanguageFile.creditNote[lang] + " " + ivNumber; 
-                    }
-                    pdfPenman.setInvoiceNumber(ivNumberString);
-
-                    pdfPenman.setTable(ivTable.getFormattedTable());
-
-                    ArrayList<String> footer = new ArrayList<String>();
-                    String footerLine = LanguageFile.footer1[lang];
-                    footerLine += " " + ivTerm + " ";
-                    footerLine += LanguageFile.footer2[lang];
-                    footer.add(footerLine);
-                    footerLine = "IBAN " + ivAccount;
-                    footer.add(footerLine);
-                    pdfPenman.setFooter(footer);
-
-                    pdfPenman.savePdf();
+                    pdfPenman.makePdf(formalInvoice);
                 }   
             }
 

@@ -31,4 +31,5 @@ public class LanguageFile {
 
     static public final String[] footer1 = {"Gelieve het verschuldigde bedrag binnen", "Kindly requesting payment within"};
     static public final String[] footer2 = {"dagen te storten op:", "days on the following account number:"};
+    static public final String[] page = {"pagina ", "page "};
 }

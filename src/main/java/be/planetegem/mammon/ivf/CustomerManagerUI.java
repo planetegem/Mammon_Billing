@@ -50,36 +50,6 @@ public class CustomerManagerUI extends JPanel {
         customerDetails.setText("");
     }
 
-    // Get stringified version of customer (for pdf creation)
-    public ArrayList<String> getPdfString(){
-        ArrayList<String> customerLines = new ArrayList<String>();
-        
-        // Check if contact person was provided
-        if (!currentCustomer.get("FAMILYNAME").equals("")){
-            customerLines.add(currentCustomer.get("FIRSTNAME") + " " + currentCustomer.get("FAMILYNAME"));
-        }
-        // Company name immediately beneath & empty line
-        customerLines.add(currentCustomer.get("COMPANYNAME"));
-        customerLines.add("");
-        // Address
-        String address = currentCustomer.get("STREETNAME") + " " + currentCustomer.get("HOUSENUMBER");
-        if (!currentCustomer.get("BOXNUMBER").equals("")){
-            address += " " + currentCustomer.get("BOXNUMBER");
-        }
-        customerLines.add(address);
-        customerLines.add(currentCustomer.get("POSTALCODE") + " " + currentCustomer.get("PLACENAME") + " - " + currentCustomer.get("COUNTRYNAME"));
-        customerLines.add("");
-
-        // Vat number: compare customertype, potentially add 2nd line
-        if (!currentCustomer.get("VATNUMBER").equals("")){
-            customerLines.add(LanguageFile.vat[lang] + " " + currentCustomer.get("VATNUMBER")); 
-            if (!currentCustomer.get("VATNUMBER2").equals("")){
-                customerLines.add(currentCustomer.get("VATNUMBER2"));
-            }
-        }
-        return customerLines;
-    }
-
     // Create new customer preview: call whenever new customer is loaded/selected
     protected void setPreview(HashMap<String, String> selectedCustomer){
         String customerString = "";

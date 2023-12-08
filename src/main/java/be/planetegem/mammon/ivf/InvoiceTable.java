@@ -10,7 +10,6 @@ import javax.swing.JOptionPane;
 import be.planetegem.mammon.statics.DocConstraints;
 import be.planetegem.mammon.statics.LanguageFile;
 import be.planetegem.mammon.util.FormattedCell;
-import be.planetegem.mammon.util.FormattedInvoice;
 
 public class InvoiceTable extends InvoiceTableUI implements ActionListener {
 
@@ -153,28 +152,27 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
         lineOffset = 0;
 
         for (int i = 0; i < tableArray.size(); i++){
-            // Convert first line faithfully
+            // check offsets
             int heightOffset = 0;
+            if (offsets.get(i + 1) != null){
+                heightOffset = offsets.get(i + 1);
+            }
+
+            // Convert first line faithfully
             if (i == 0){
                 String content = tableArray.get(i).get("date");
-                dateColumn.add(new FormattedCell(i, 1, content));
+                dateColumn.add(new FormattedCell(i, 1 + heightOffset, content));
 
                 content = tableArray.get(i).get("amount");
                 if (!content.equals("/") && tableArray.get(i).get("unit") != null &&
                     !tableArray.get(i).get("unit").equals("")){
                     content += " " + tableArray.get(i).get("unit");
                 }
-                amountColumn.add(new FormattedCell(i, 1, content));
+                amountColumn.add(new FormattedCell(i, 1 + heightOffset, content));
 
                 content = tableArray.get(i).get("price");
-                priceColumn.add(new FormattedCell(i, 1, content + " €"));
+                priceColumn.add(new FormattedCell(i, 1 + heightOffset, content + " €"));
             } else {
-                // check offsets
-                heightOffset = 0;
-                if (offsets.get(i + 1) != null){
-                    heightOffset = offsets.get(i + 1);
-                }
-
                 // Compare against previous values
                 String content;
                 if (tableArray.get(i).get("date").equals(tableArray.get(i - 1).get("date"))){
@@ -284,9 +282,7 @@ public class InvoiceTable extends InvoiceTableUI implements ActionListener {
                     tableArray.remove(tableArray.size() - 1);
                 }
                 // if table is empty after deletion, skip simplify step
-                if (tableArray.size() > 0){
-                    simplifyTable();
-                }
+                simplifyTable();
                 makeTableBody();
             }
             if (e.getSource() == vatSelector){

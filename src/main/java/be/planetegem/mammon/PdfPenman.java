@@ -3,13 +3,16 @@ package be.planetegem.mammon;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 
+import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -20,11 +23,11 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 import be.planetegem.mammon.db.DbConsole;
+import be.planetegem.mammon.ivf.FormattedInvoice;
 import be.planetegem.mammon.statics.DocConstraints;
 import be.planetegem.mammon.statics.LanguageFile;
 import be.planetegem.mammon.statics.StyleSheet;
 import be.planetegem.mammon.util.FormattedCell;
-import be.planetegem.mammon.util.FormattedInvoice;
 import be.planetegem.mammon.util.ResizedImage;
 
 public class PdfPenman {
@@ -34,6 +37,8 @@ public class PdfPenman {
     private String pdfPath;
     private PDDocument file;
     private PDPageContentStream ctx;
+    private File mainFontFile = new File(StyleSheet.fontPath);
+    private float fMulti = 1f;
 
     public static final int CENTER = 0;
     public static final int LEFT = 1;
@@ -83,7 +88,27 @@ public class PdfPenman {
         // step 1: start PDDocument & content stream
         file = new PDDocument();
         PDPage page = new PDPage(PDRectangle.A4);
-        
+
+        if (!mainFontFile.exists()){
+            mainFontFile = new File("font.ttf");
+            db.logEvent("Couldn't find font; switching to fallback");
+            if (!mainFontFile.exists()){
+                InputStream is = getClass().getClassLoader().getResourceAsStream("FreeSerif.ttf");
+                try {
+                    File tempFile = File.createTempFile("font", ".ttf");
+                    tempFile.deleteOnExit();
+                    FileOutputStream os = new FileOutputStream(tempFile);
+                    IOUtils.copy(is, os);
+                    mainFontFile = tempFile;
+                    fMulti = 1.2f;
+                } catch (IOException e){
+                    db.logEvent("Exception while trying fallback font: " + e.getMessage());
+                }
+            } else {
+                db.logEvent("User provided fallback font");
+            }
+        }        
+
         file.addPage(page);
         try {
             ctx = new PDPageContentStream(file, page);
@@ -148,7 +173,7 @@ public class PdfPenman {
 
         // Add profile string
         try {
-            PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
+            PDType0Font font = PDType0Font.load(file, mainFontFile);
             int fontSize = 11; 
             db.logEvent("Printing profile string: " + invoice.profileString);           
             String nextLine = "";
@@ -192,7 +217,7 @@ public class PdfPenman {
         db.logEvent("Printing invoice header: " + invoice.ivHeader);
 
         try {
-            PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
+            PDType0Font font = PDType0Font.load(file, mainFontFile);
             int fontSize = 11;
 
             xPos = DocConstraints.baseMargin*DocConstraints.pdfRatio;
@@ -212,12 +237,12 @@ public class PdfPenman {
         db.logEvent("Printing customer: " + invoice.customerLines.get(0));
 
         try {
-            PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
+            PDType0Font font = PDType0Font.load(file, mainFontFile);
             int fontSize = 11;
 
             xPos = (DocConstraints.baseMargin + DocConstraints.customerLeadingWidth)*DocConstraints.pdfRatio;
             yPos = (DocConstraints.a4Height - DocConstraints.customerY)*DocConstraints.pdfRatio;
-            float lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize * 0.6f;
+            float lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize * 0.6f * fMulti;
 
             ctx.beginText();
             ctx.setFont(font, fontSize);           
@@ -242,7 +267,7 @@ public class PdfPenman {
         db.logEvent("Printing Invoice number: " + invoice.ivNumber);
 
         try {
-            PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
+            PDType0Font font = PDType0Font.load(file, mainFontFile);
             int fontSize = 11;
 
             xPos = (DocConstraints.baseMargin + DocConstraints.customerLeadingWidth)*DocConstraints.pdfRatio;
@@ -318,11 +343,11 @@ public class PdfPenman {
 
             // check if there is a 2nd page
             if (invoice.multiDescriptionColumn.get(1).size() > 0){
-                PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
+                PDType0Font font = PDType0Font.load(file, mainFontFile);
                 int fontSize = 11;
                 String pageFooter = LanguageFile.page[invoice.lang] + "1/2";
 
-                float lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.6f ;
+                float lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize * 0.6f  * fMulti;
                 yPos = DocConstraints.baseMargin*DocConstraints.pdfRatio + lineHeight;
 
                 float lineWidth = font.getStringWidth(pageFooter) / 1000 * fontSize;
@@ -416,7 +441,7 @@ public class PdfPenman {
             drawCell(invoice.subtotals.get(3), xPos, yPos, cellWidth, cellHeight, RIGHT, false);
 
             if (invoice.reverseVat){
-                PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
+                PDType0Font font = PDType0Font.load(file, mainFontFile);
                 int fontSize = 11;
                 String str = invoice.reverseVatString.get(0);
                 float strHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.5f ;
@@ -470,10 +495,10 @@ public class PdfPenman {
         db.logEvent("Printing footer");
 
         try {
-            PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
+            PDType0Font font = PDType0Font.load(file, mainFontFile);
             int fontSize = 11;
 
-            float lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.6f ;
+            float lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.6f * fMulti;
             if (pageCount == 1){
                 yPos = DocConstraints.baseMargin*DocConstraints.pdfRatio + lineHeight;
             } else {
@@ -500,7 +525,7 @@ public class PdfPenman {
             // page count
             if (pageCount > 1){
                 String pageFooter = LanguageFile.page[invoice.lang] + pageCount + "/" + pageCount;
-                lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.6f ;
+                lineHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize *0.6f * fMulti;
                 yPos = DocConstraints.baseMargin*DocConstraints.pdfRatio + lineHeight;
                 lineWidth = font.getStringWidth(pageFooter) / 1000 * fontSize;
                 xPos = (DocConstraints.a4Width*DocConstraints.pdfRatio - lineWidth)*0.5f;
@@ -533,7 +558,7 @@ public class PdfPenman {
         ctx.addRect(xPos, yPos, cellWidth, cellHeight);
         ctx.stroke();
 
-        PDType0Font font = PDType0Font.load(file, new File(StyleSheet.fontPath));
+        PDType0Font font = PDType0Font.load(file, mainFontFile);
         int fontSize = 11;
         ctx.setFont(font, fontSize);
 

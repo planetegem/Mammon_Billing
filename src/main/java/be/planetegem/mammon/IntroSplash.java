@@ -2,6 +2,7 @@ package be.planetegem.mammon;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
+import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -9,16 +10,18 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import be.planetegem.mammon.statics.StyleSheet;
-import be.planetegem.mammon.util.ResizedImage;
 import be.planetegem.mammon.util.ui.JAnchor;
 import be.planetegem.mammon.util.ui.JFontLabel;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Image;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class IntroSplash extends JInternalFrame implements ActionListener {
     public void actionPerformed(ActionEvent e){
@@ -51,8 +54,10 @@ public class IntroSplash extends JInternalFrame implements ActionListener {
         logoContainer.setPreferredSize(logoSize);
         getContentPane().add(logoContainer);
         try {
-            ResizedImage image = new ResizedImage("https://planetegem.be/demo/mammon_billing/assets/jpvr.png", logoSize.width, logoSize.height);
-            JLabel jpLogo = new JLabel(new ImageIcon(image.resized));
+            InputStream is = getClass().getClassLoader().getResourceAsStream("jpvr.png");
+            BufferedImage image = ImageIO.read(is);
+            Image resizedImage = image.getScaledInstance(logoSize.width, logoSize.height, java.awt.Image.SCALE_SMOOTH);
+            JLabel jpLogo = new JLabel(new ImageIcon(resizedImage));
             logoContainer.add(jpLogo);
         } catch (IOException e){};
         

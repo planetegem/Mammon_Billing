@@ -1,10 +1,11 @@
-package be.planetegem.mammon.util;
+package be.planetegem.mammon.ivf;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import be.planetegem.mammon.statics.DocConstraints;
 import be.planetegem.mammon.statics.LanguageFile;
+import be.planetegem.mammon.util.FormattedCell;
 
 public class FormattedInvoice {
     
@@ -163,7 +164,6 @@ public class FormattedInvoice {
     }
     public void setLineCount(int lineCount){
         this.lineCount = lineCount;
-        System.out.println(lineCount);
     }
     public void applyMergedCellPatch(){
         // compare last row of first page with first row of 2nd page

@@ -200,7 +200,10 @@ public class InvoiceTableUI extends JPanel {
 
     // add LineMaker to table body; if table body remains empty, draw empty field
     protected void setLineCreator(){
-            
+        if (tableArray.size() == 0){
+            this.tableLines = 0;
+        }
+
         // Add 2 table lines if in process of adding new line
         if (addingNewLine){
             tableBody.add(lineCreator);

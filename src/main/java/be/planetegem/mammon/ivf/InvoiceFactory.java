@@ -16,7 +16,6 @@ import be.planetegem.mammon.PdfPenman;
 import be.planetegem.mammon.db.DbCommands;
 import be.planetegem.mammon.db.DbConsole;
 import be.planetegem.mammon.statics.LanguageFile;
-import be.planetegem.mammon.util.FormattedInvoice;
 
 public class InvoiceFactory extends InvoiceFactoryUI implements ActionListener {
 

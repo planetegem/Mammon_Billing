@@ -28,7 +28,7 @@ public class FormattedCell {
             testString += word + " ";
             tester.setText(testString);
 
-            if (tester.getPreferredSize().getWidth() >= width){
+            if (tester.getPreferredSize().getWidth() >= width*0.98){
                 lineArray.add(word);
                 testString = word;
                 lines++;

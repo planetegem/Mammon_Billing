@@ -1,5 +1,6 @@
 package be.planetegem.mammon;
 
+import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
@@ -22,6 +23,9 @@ import java.awt.FlowLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class Mammon extends JFrame implements ActionListener
 {   
@@ -142,6 +146,13 @@ public class Mammon extends JFrame implements ActionListener
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         mainContent.add(BorderLayout.CENTER, scrollPane);
         setIntroSplash();
+
+        // Set icon
+        try {
+            InputStream is = getClass().getClassLoader().getResourceAsStream("icon.png");
+            BufferedImage image = ImageIO.read(is);
+            setIconImage(image);
+        } catch (IOException e){}
 
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

@@ -10,3 +10,6 @@ The component containing data logic is an extension of its UI-class.
 The result is  a program with roughly the following structure:
 ![alt text](https://www.planetegem.be/demo/mammon_billing/mammon-schema.png)
 
+An SQL-database contains all invoice data saved by the user. Interaction with this database are executed with Apache Derby.
+Afterwards, users can create a PDF from their invoice: this is done using Apache PDFBox.
+Everything was compiled to a single jar with Maven, the assembly:single goal being used to take dependencies with it.

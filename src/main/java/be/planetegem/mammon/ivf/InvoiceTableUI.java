@@ -310,8 +310,7 @@ public class InvoiceTableUI extends JPanel {
 
             currentX += DocConstraints.tPrice*DocConstraints.previewRatio;
             for (FormattedCell cell : totalColumn){
-                cell.string += " € ";
-                JLabel tempTotal = new JLabel(cell.string, SwingConstants.CENTER);
+                JLabel tempTotal = new JLabel(cell.string, SwingConstants.RIGHT);
                 tempTotal.setFont(StyleSheet.documentFont);
                 tempTotal.setBounds(
                     currentX, 

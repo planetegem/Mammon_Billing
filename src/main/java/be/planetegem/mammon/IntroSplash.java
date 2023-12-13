@@ -99,9 +99,9 @@ public class IntroSplash extends JInternalFrame implements ActionListener {
         // Intro text
         String introText = "";
         introText += "Uw factuur aan 170 per uur! Met Mammon Billing maakt u facturen in<br>";
-        introText += "stijl, want geld koopt misschien geen stijl, stijl koopt niettemin wel geld.<br>";
+        introText += "stijl, want geld koopt misschien geen stijl, stijl koopt wel geld.<br>";
         introText += "<br>";
-        introText += "Dank aan Jean-Pierre Van Rossem, die tijdens een séance de opdracht<br>";
+        introText += "Met dank aan Jean-Pierre Van Rossem, die tijdens een séance de opdracht<br>";
         introText += "gaf die deze software mogelijk heeft gemaakt.";
         JPanel introTextContainer = new JPanel();
         introTextContainer.setBackground(StyleSheet.wizardBlue);

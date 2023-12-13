@@ -48,7 +48,7 @@ public class FormattedCell {
     public FormattedCell(int y, int height, float value){
         this.y = y;
         this.height = height;
-        this.string = Float.toString(value);
         this.value = value;
+        this.string = String.format("%.2f", value).replace(".", ",") + " € ";
     }
 }
